@@ -24,7 +24,7 @@ class Plugin:
   log(f"Discord Webhook: {discordWebhookURL}")
   pluginUser = os.environ["DECKY_USER"]
   pluginSettingsDir = os.environ["DECKY_PLUGIN_SETTINGS_DIR"]
-  guidesDirPath = f"/home/{pluginUser}/homebrew/plugins/DeckShare/guides"
+  guidesDirPath = f"/home/{pluginUser}/homebrew/plugins/deckshare-plugin/guides"
   settingsManager = SettingsManager(name='DeckShare', settings_directory=pluginSettingsDir)
   steamdir = "/home/deck/.local/share/Steam/"
   guides = {}
@@ -40,6 +40,18 @@ class Plugin:
   async def getGuides(self):
     self._getGuides(self)
     return self.guides
+
+  def _getGuides(self):
+    #log(self.guidesDirPath)
+    for guideFileName in os.listdir(self.guidesDirPath):
+      #log(guideFileName)
+      with open(os.path.join(self.guidesDirPath, guideFileName), 'r') as guideFile:
+        guideName = guideFileName.replace("_", " ").replace(".md", "")
+        self.guides[guideName] = "".join(guideFile.readlines())
+
+      #log(self.guides)
+
+    pass
   
   async def getSetting(self, key, defaultVal):
     return self.settingsManager.getSetting(key, defaultVal)
@@ -92,11 +104,30 @@ class Plugin:
     url = "{0}userdata/{1}/760/remote/".format(self.steamdir, user & 0xFFFFFFFF)
 
     for root, dirs, files in os.walk(url):
-      for file in files:
-        if file.endswith(".jpg"):
-          screenshots[file] = {'path': os.path.join(root, file), 'name': file, 'id': file}
-    log(url)
-    return screenshots
+        for file in files:
+            if file.endswith(".jpg"):
+                screenshots[file] = {'path': os.path.join(root, file), 'name': file, 'id': file}
+
+    # Convert the dictionary to a list of tuples and sort it based on the file name
+    sorted_screenshots = sorted(screenshots.items(), key=lambda x: x[0], reverse=True)
+
+    # Get only the first 10 elements of the list
+    sorted_screenshots = sorted_screenshots[:5]
+
+    # Convert the list of tuples back to a dictionary
+    return dict(sorted_screenshots)
+
+  async def uploadScreenshot(self, filepath):
+    try:
+        log("UploadScreenshots called")
+        newestScreenshot = filepath
+        log("Newest Screenshot" + newestScreenshot)
+        status = await upload_file(newestScreenshot, discordWebhookURL)
+        log(status)
+        return status
+    except Exception as e:
+        log(f"An error occurred: {e}")
+    return False
 
   async def uploadScreenshots(self):
     try:
