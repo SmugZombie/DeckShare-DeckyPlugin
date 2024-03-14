@@ -14,7 +14,6 @@ class JsInteropManager:
 
   def startServer(self):
     log(f"Starting Websocket server on port {self.port}")
-    # self.serverProcess = Popen(["python", "server.py", self.hostName, self.port, os.environ["DECKY_PLUGIN_LOG_DIR"]], shell=True)
     self.serverProcess = Popen(f"python {os.path.join(os.path.dirname(__file__), 'server.py')} \"{self.hostName}\" \"{self.port}\" \"{os.environ['DECKY_PLUGIN_LOG_DIR']}\"", shell=True)
     pass
 

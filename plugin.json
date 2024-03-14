@@ -3,8 +3,8 @@
   "author": "SmugZombie",
   "flags": [],
   "publish": {
-    "tags": ["screenshot", "convenience", "discord"],
-    "description": "",
+    "tags": ["screenshot", "convenience", "discord","upload","sharing"],
+    "description": "DeckShare is a simple plugin that monitors SteamOS for new screenshots using an automation hook and automatically posts them to Discord via the provided webhook.",
     "image": "https://raw.githubusercontent.com/SmugZombie/DeckShare-DeckyPlugin/main/assets/thumbnail.png"
   }
 }

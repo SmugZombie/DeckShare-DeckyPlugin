@@ -15167,6 +15167,7 @@
         const [ webhookUrl, setWebhookUrl ] = React.useState();
         const [ isError, setIsError ] = React.useState(false);
         const [ isLoadingUrl, setIsLoadingUrl ] = React.useState(false);
+        const [ version, setVersion ] = React.useState("0.0.0");
         const tries = React.useRef(0);
 
         async function saveWebhookUrl(webhookUrl) {
@@ -15211,6 +15212,15 @@
           }
         }
 
+        async function loadVersion() {
+          const version = await PyInterop.getSetting("version", "");
+          setVersion(version);
+        }
+
+        if(version == "0.0.0"){
+          loadVersion();
+        }
+
         loadWebhookUrl(false);
 
         if (Object.values(screenshots).length === 0 && tries.current < 10) {
@@ -15242,27 +15252,30 @@
           margin-left: 16px;
         }
       `),
-            window.SP_REACT.createElement("div", { className: "deckshare-plugin-scope" },
-                window.SP_REACT.createElement(PanelSection, null,                    
-                    window.SP_REACT.createElement(PanelSectionRow, null,
-                      window.SP_REACT.createElement(Field, { description: window.SP_REACT.createElement(TextField, { description: window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: () => { saveWebhookUrl(webhookUrl) } }, "Save Config"), label: 'Webhook URL', value: webhookUrl, onChange: (e) => { setWebhookUrl(e?.target.value); } }) },)),
-                      (isError) ? (window.SP_REACT.createElement(PanelSectionRow, null,
-                        window.SP_REACT.createElement(Field, { description: isError.toString(), layout: "below" }, ""))) : (""),
-                    
-                      (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 10px", fontSize: "12px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
-                        screenshotsList.map((itm) => (window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))),
+      window.SP_REACT.createElement("div", { className: "deckshare-plugin-scope" },
+        window.SP_REACT.createElement(PanelSection, null,                    
+          window.SP_REACT.createElement(PanelSectionRow, null,
+            window.SP_REACT.createElement(TextField, { description: 
+              window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: () => { saveWebhookUrl(webhookUrl) } }, "Save Config"),
+              label: 'Webhook URL', value: webhookUrl, onChange: (e) => { setWebhookUrl(e?.target.value); } } 
+            ),
+            (isError) ? (
+              window.SP_REACT.createElement(Field, { description: isError.toString(), layout: "below" }, "")) : (""),
 
-                        
-                        window.SP_REACT.createElement(PanelSectionRow, null,
-                            window.SP_REACT.createElement(ButtonItem, { description: "Refresh the plugin", layout: "below", onClick: reload }, "Refresh")),
-                        window.SP_REACT.createElement(PanelSectionRow, null,
-                          window.SP_REACT.createElement(Field, { label: "Created with ❤️ by SmugZombie", layout: "below" }, "")),
-                        window.SP_REACT.createElement(PanelSectionRow, null,
-                          window.SP_REACT.createElement(Field, { label: "More Info: https://deckshare.zip", layout: "below" }, ""))
-                        
-                            
-                            
-                            ))))));
+              (screenshotsList.length == 0) ? (
+                window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 10px", fontSize: "12px" } }, "No screenshots found")) : (
+                  window.SP_REACT.createElement(React.Fragment, null, screenshotsList.map((itm) => (
+                    window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))))),
+
+              window.SP_REACT.createElement(ButtonItem, { description: "Refresh the plugin", layout: "below", onClick: reload }, "Refresh"),
+              window.SP_REACT.createElement(Field, { label: "Created with ❤️ by SmugZombie", layout: "below" }, ""),
+              window.SP_REACT.createElement(Field, { label: "More Info: https://deckshare.zip", layout: "below" }, ""),
+              window.SP_REACT.createElement(Field, { label: "Version: " + version, layout: "below" }, ""),
+
+          ),
+            
+            
+          ))));
     };
     
     var index = definePlugin((serverApi) => {
