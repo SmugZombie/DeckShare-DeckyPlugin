@@ -668,6 +668,22 @@
           const res = await this.serverAPI.callPluginMethod("uploadScreenshots", {});
           return res;
       }
+
+        static async uploadScreenshot(filepath) {
+          const res = await this.serverAPI.callPluginMethod("uploadScreenshot", { filepath: filepath});
+          return res;
+        }
+
+        static async getWebhookUrl() {
+          const res = await this.serverAPI.callPluginMethod("getWebhookUrl", {});
+          return res;
+        }
+
+        static async setWebhookUrl(webhookUrl) {
+          const res = await this.serverAPI.callPluginMethod("setWebhookUrl", { webhookUrl: webhookUrl});
+          return res;
+        }
+
         /**
          * Shows a toast message.
          * @param title The title of the toast.
@@ -927,7 +943,9 @@
         }
     }
     const ScreenshotsContext = React.createContext(null);
+    const WebhookContext = React.createContext('');
     const useScreenshotsState = () => React.useContext(ScreenshotsContext);
+    const useWebhookState = () => React.useContext(WebhookContext);
     const ScreenshotsContextProvider = ({ children, screenshotsStateClass }) => {
         const [publicState, setPublicState] = React.useState({
             ...screenshotsStateClass.getPublicState()
@@ -1336,7 +1354,7 @@
     }
 
     /**
-     * Class representing an Instance of Bash Screenshots.
+     * Class representing an Instance of Screenshots.
      */
     class Instance {
         /**
@@ -2321,7 +2339,7 @@
             this.state = state;
             this.steamController = new SteamController();
             this.screenshotsController = new ScreenshotsController(this.steamController);
-            this.webSocketClient = new WebSocketClient("localhost", "5000", 1000);
+            this.webSocketClient = new WebSocketClient("localhost", "5050", 1000);
             this.instancesController = new InstancesController(this.screenshotsController, this.webSocketClient, this.state);
             this.hooksController = new HookController(this.steamController, this.instancesController, this.webSocketClient, this.state);
             this.gameLifetimeRegister = this.steamController.registerForAllAppLifetimeNotifications((appId, data) => {
@@ -2378,6 +2396,11 @@
         static async init() {
             PyInterop.log("PluginController initializing...");
             this.webSocketClient.connect();
+            const webhookUrl = (await PyInterop.getWebhookUrl()).result;
+            if (webhookUrl == "" || webhookUrl == null || webhookUrl == "False" || webhookUrl == "https://discord.com/api/webhooks/") {
+              PyInterop.log("Please configure the webhook url in the plugin settings.")
+              PyInterop.toast("DeckShare", "Please configure the webhook url in the plugin settings.");
+            }
             const screenshots = (await PyInterop.getScreenshots()).result;
             if (typeof screenshots === "string") {
                 PyInterop.log(`Failed to get screenshots for hooks. Error: ${screenshots}`);
@@ -2570,65 +2593,14 @@
      * @returns The ScreenshotLauncher component.
      */
     const ScreenshotLauncher = (props) => {
-        const { runningScreenshots, setIsRunning } = useScreenshotsState();
-        const [isRunning, _setIsRunning] = React.useState(PluginController.checkIfRunning(props.screenshot.id));
-        React.useEffect(() => {
-            if (PluginController.checkIfRunning(props.screenshot.id) && !runningScreenshots.has(props.screenshot.id)) {
-                setIsRunning(props.screenshot.id, true);
-            }
-        }, []);
-        React.useEffect(() => {
-            _setIsRunning(runningScreenshots.has(props.screenshot.id));
-        }, [runningScreenshots]);
+        const [isRunning, setIsRunning] = React.useState(false);
         /**
          * Determines which action to run when the interactable is selected.
          * @param screenshot The screenshot associated with this screenshotLauncher.
          */
         async function onAction(screenshot) {
-            if (isRunning) {
-                const res = await PluginController.closeScreenshot(screenshot);
-                if (!res) {
-                    PyInterop.toast("Error", "Failed to close screenshot.");
-                }
-                else {
-                    setIsRunning(screenshot.id, false);
-                }
-            }
-            else {
-                const res = await PluginController.launchScreenshot(screenshot, async () => {
-                    if (PluginController.checkIfRunning(screenshot.id) && screenshot.isApp) {
-                        setIsRunning(screenshot.id, false);
-                        const killRes = await PluginController.killScreenshot(screenshot);
-                        if (killRes) {
-                            Navigation.Navigate("/library/home");
-                            Navigation.CloseSideMenus();
-                        }
-                        else {
-                            PyInterop.toast("Error", "Failed to kill screenshot.");
-                        }
-                    }
-                });
-                if (!res) {
-                    PyInterop.toast("Error", "Screenshot failed. Check the command.");
-                }
-                else {
-                    if (!screenshot.isApp) {
-                        PyInterop.log(`Registering for WebSocket messages of type: ${screenshot.id}...`);
-                        PluginController.onWebSocketEvent(screenshot.id, (data) => {
-                            if (data.type == "end") {
-                                if (data.status == 0) {
-                                    PyInterop.toast(screenshot.name, "Screenshot execution finished.");
-                                }
-                                else {
-                                    PyInterop.toast(screenshot.name, "Screenshot execution was canceled.");
-                                }
-                                setIsRunning(screenshot.id, false);
-                            }
-                        });
-                    }
-                    setIsRunning(screenshot.id, true);
-                }
-            }
+          PyInterop.toast(screenshot)
+          await PyInterop.uploadScreenshot(screenshot.path)
         }
         return (window.SP_REACT.createElement(React.Fragment, null,
             window.SP_REACT.createElement("style", null, `
@@ -2643,7 +2615,7 @@
           }
       `),
             window.SP_REACT.createElement("div", { className: "custom-buttons" },
-                window.SP_REACT.createElement(Field, { label: window.SP_REACT.createElement(ScreenshotLabel, { screenshot: props.screenshot, isRunning: isRunning }) },
+                window.SP_REACT.createElement(Field, { label: window.SP_REACT.createElement(ScreenshotLabel, { screenshot: props.screenshot, isRunning: false }) },
                     window.SP_REACT.createElement(Focusable, { style: { display: "flex", width: "100%" } },
                         window.SP_REACT.createElement(DialogButton, { onClick: () => onAction(props.screenshot), style: {
                                 minWidth: "30px",
@@ -15219,11 +15191,28 @@
 
     const Content = ({}) => {
         const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
+        const [ webhookUrl, setWebhookUrl ] = React.useState();
         const tries = React.useRef(0);
+
+        async function saveWebhookUrl(webhookUrl) {
+          await PyInterop.setWebhookUrl(webhookUrl).then((res) => {
+            setWebhookUrl(res.result);
+          });
+        }
+
         async function reload() {
+          try{
+
+            await PyInterop.getWebhookUrl().then((res) => {
+              setWebhookUrl(res.result);
+            });
+
             await PyInterop.getScreenshots().then((res) => {
                 setScreenshots(res.result);
             });
+          }catch(e){  
+            PyInterop.log("Error in reload: " + e);
+          }
         }
         if (Object.values(screenshots).length === 0 && tries.current < 10) {
             reload();
@@ -15256,16 +15245,22 @@
       `),
             window.SP_REACT.createElement("div", { className: "deckshare-plugin-scope" },
                 window.SP_REACT.createElement(PanelSection, null,
+                    //window.SP_REACT.createElement(PanelSectionRow, null, window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: () => { Navigation.CloseSideMenus(); Navigation.Navigate("/deckshare-plugin-config"); } }, "Plugin Config")),
+                    
                     window.SP_REACT.createElement(PanelSectionRow, null,
-                        window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: () => { Navigation.CloseSideMenus(); Navigation.Navigate("/deckshare-plugin-config"); } }, "Plugin Config")),
-                    (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
+                      window.SP_REACT.createElement(Field, { description: window.SP_REACT.createElement(TextField, { label: 'Webhook URL', value: webhookUrl, onChange: (e) => { setWebhookUrl(e?.target.value); } }) })),
+                      window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: () => { saveWebhookUrl(webhookUrl) } }, "Save Config"),
+                    (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 10px", fontSize: "12px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
                         screenshotsList.map((itm) => (window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))),
                         window.SP_REACT.createElement(PanelSectionRow, null,
                             window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: reload }, "Reload"))))))));
     };
     const ScreenshotsManagerRouter = ({ guides }) => {
-        const guidePages = {};
-        Object.entries(guides).map(([guideName, guide]) => {
+        try{
+          const guidePages = {};
+          PyInterop.log("Guides:", guides);
+          Object.entries(guides).map(([guideName, guide]) => {
+            PyInterop.log(guideName)
             guidePages[guideName] = {
                 title: guideName,
                 content: window.SP_REACT.createElement(GuidePage, { content: guide }),
@@ -15273,7 +15268,11 @@
                 icon: window.SP_REACT.createElement(MdNumbers, null),
                 hideTitle: true
             };
-        });
+          });
+        }catch(e){
+          PyInterop.log("Guides ERROR:" + e)
+        }
+        
         return (window.SP_REACT.createElement(SidebarNavigation, { title: "Plugin Config", showTitle: true, pages: [
                 {
                     title: "Add Screenshot",
@@ -15305,14 +15304,18 @@
         const state = new ScreenshotsState();
         PluginController.setup(serverApi, state);
         const loginHook = PluginController.initOnLogin();
-        PyInterop.getGuides().then((res) => {
+        /*try{
+          PyInterop.getGuides().then((res) => {
             const guides = res.result;
-            console.log("Guides:", guides);
             serverApi.routerHook.addRoute("/deckshare-plugin-config", () => (window.SP_REACT.createElement(ScreenshotsContextProvider, { screenshotsStateClass: state },
                 window.SP_REACT.createElement(ScreenshotsManagerRouter, { guides: guides }))));
-        });
+          });
+        }catch(e){
+          PyInterop.log("Guides ERROR:" + e)
+        }*/
+        
         return {
-            title: window.SP_REACT.createElement("div", { className: staticClasses.Title }, "Bash Screenshots"),
+            title: window.SP_REACT.createElement("div", { className: staticClasses.Title }, "DeckShare Screenshots"),
             content: (window.SP_REACT.createElement(ScreenshotsContextProvider, { screenshotsStateClass: state },
                 window.SP_REACT.createElement(Content, { serverAPI: serverApi }))),
             icon: window.SP_REACT.createElement(IoApps, null),

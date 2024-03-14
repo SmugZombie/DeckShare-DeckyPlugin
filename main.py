@@ -17,17 +17,43 @@ from settings import SettingsManager
 from py_backend.logger import log
 
 Initialized = False
-discordWebhookURL = "https://discord.com/api/webhooks/1176344361219395674/Gw4C7-aJ6u-V7pu_57yAOwg_9ZqeiLedball1KW_gc54JO8dPBO1ZP_cHNbfCi5ZRRmH"
 
 class Plugin:
   log(f"Plugin loaded. User: {os.environ['DECKY_USER']}")
-  log(f"Discord Webhook: {discordWebhookURL}")
   pluginUser = os.environ["DECKY_USER"]
   pluginSettingsDir = os.environ["DECKY_PLUGIN_SETTINGS_DIR"]
-  guidesDirPath = f"/home/{pluginUser}/homebrew/plugins/DeckShare/guides"
+  pluginDirPath = os.path.dirname(__file__)
+  guidesDirPath = f"/home/{pluginUser}/homebrew/plugins/deckshare-plugin/guides"
   settingsManager = SettingsManager(name='DeckShare', settings_directory=pluginSettingsDir)
   steamdir = "/home/deck/.local/share/Steam/"
   guides = {}
+  discordWebhookURLBase = "https://discord.com/api/webhooks/"
+
+  async def getWebhookUrl(self):
+    try:
+      #with open(self.pluginDirPath + '/discordwebhook', 'r') as file:
+      #  self.discordWebhookURL = file.readline().strip()
+      #log("Getting Discord Webhook: " + self.discordWebhookURL)
+      self.discordWebhookURL = str(await self.getSetting(self, 'discordWebhook', ''))
+      if(self.discordWebhookURL == ""):
+        self.discordWebhookURL = self.discordWebhookURLBase
+      log("Storage Discord Webhook: " + self.discordWebhookURL)
+      return self.discordWebhookURL
+    except Exception as e:
+      log(f"An error occurred: {e}")
+      return False
+      
+  async def setWebhookUrl(self, webhookUrl):
+    try:
+      #with open(self.pluginDirPath + '/discordwebhook', 'w') as file:
+      #  file.write(webhookUrl)
+      self.discordWebhookURL = webhookUrl
+      log("Setting Discord Webhook: " + self.discordWebhookURL)
+      await self.setSetting(self, 'discordWebhook', webhookUrl)
+      return self.discordWebhookURL
+    except Exception as e:
+      log(f"An error occurred: {e}")
+      return False
 
   def GetSteamId(self):
     d = vdf.parse(open("{0}config/loginusers.vdf".format(self.steamdir), encoding="utf-8"))
@@ -40,6 +66,18 @@ class Plugin:
   async def getGuides(self):
     self._getGuides(self)
     return self.guides
+
+  def _getGuides(self):
+    #log(self.guidesDirPath)
+    for guideFileName in os.listdir(self.guidesDirPath):
+      #log(guideFileName)
+      with open(os.path.join(self.guidesDirPath, guideFileName), 'r') as guideFile:
+        guideName = guideFileName.replace("_", " ").replace(".md", "")
+        self.guides[guideName] = "".join(guideFile.readlines())
+
+      #log(self.guides)
+
+    pass
   
   async def getSetting(self, key, defaultVal):
     return self.settingsManager.getSetting(key, defaultVal)
@@ -69,12 +107,12 @@ class Plugin:
 
     if "webSocketPort" not in self.settingsManager.settings:
       log("No WebSocket port detected in settings.")
-      self.settingsManager.setSetting("webSocketPort", "5000")
-      log("Set WebSocket port to default; \"5000\"")
+      self.settingsManager.setSetting("webSocketPort", "5050")
+      log("Set WebSocket port to default; \"5050\"")
     else:
       log(f"WebSocket port loaded from settings. Port: {self.settingsManager.getSetting('webSocketPort', '')}")
       
-    self.jsInteropManager = JsInteropManager("localhost", self.settingsManager.getSetting("webSocketPort", "5000"))
+    self.jsInteropManager = JsInteropManager("localhost", self.settingsManager.getSetting("webSocketPort", "5050"))
     self.instanceManager = InstanceManager(0.25, self.jsInteropManager)
 
     #* start websocket server
@@ -92,18 +130,43 @@ class Plugin:
     url = "{0}userdata/{1}/760/remote/".format(self.steamdir, user & 0xFFFFFFFF)
 
     for root, dirs, files in os.walk(url):
-      for file in files:
-        if file.endswith(".jpg"):
-          screenshots[file] = {'path': os.path.join(root, file), 'name': file, 'id': file}
-    log(url)
-    return screenshots
+        for file in files:
+            if file.endswith(".jpg"):
+                screenshots[file] = {'path': os.path.join(root, file), 'name': file, 'id': file}
+
+    # Convert the dictionary to a list of tuples and sort it based on the file name
+    sorted_screenshots = sorted(screenshots.items(), key=lambda x: x[0], reverse=True)
+
+    # Get only the first 10 elements of the list
+    sorted_screenshots = sorted_screenshots[:5]
+
+    # Convert the list of tuples back to a dictionary
+    return dict(sorted_screenshots)
+
+  async def uploadScreenshot(self, filepath):
+    try:
+        if(self.discordWebhookURL == "" or self.discordWebhookURL == False):
+          log("No Valid Webhook URL Found")
+          return False
+        log("UploadScreenshots called")
+        newestScreenshot = filepath
+        log("Newest Screenshot" + newestScreenshot)
+        status = await upload_file(newestScreenshot, self.discordWebhookURL)
+        log(status)
+        return status
+    except Exception as e:
+        log(f"An error occurred: {e}")
+    return False
 
   async def uploadScreenshots(self):
     try:
+        if(self.discordWebhookURL == "" or self.discordWebhookURL == False):
+          log("No Valid Webhook URL Found")
+          return False
         log("UploadScreenshots called")
         newestScreenshot = get_newest_jpg(self)
         log("Newest Screenshot" + newestScreenshot)
-        status = await upload_file(newestScreenshot, discordWebhookURL)
+        status = await upload_file(newestScreenshot, self.discordWebhookURL)
         log(status)
         return status
     except Exception as e:
