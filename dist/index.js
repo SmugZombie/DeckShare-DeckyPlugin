@@ -2602,6 +2602,7 @@
           PyInterop.toast(screenshot)
           await PyInterop.uploadScreenshot(screenshot.path)
         }
+        
         return (window.SP_REACT.createElement(React.Fragment, null,
             window.SP_REACT.createElement("style", null, `
           .custom-buttons {
@@ -15160,52 +15161,31 @@
     const mdIt = new markdownIt({
         html: true
     });
-    const GuidePage = ({ content }) => {
-        const ref = scrollableRef();
-        return (window.SP_REACT.createElement(React.Fragment, null,
-            window.SP_REACT.createElement("style", null, `
-        .deckshare-plugin__guide-container table {
-          border: 1px solid;
-          border-collapse: collapse;
-        }
-
-        .deckshare-plugin__guide-container th {
-          padding: 0 7px;
-          border: 1px solid;
-        }
-
-        .deckshare-plugin__guide-container td {
-          padding: 0 7px;
-          border: 1px solid;
-        }
-
-        .deckshare-plugin__guide-container tr:nth-child(odd) {
-          background-color: #1B2838;
-        }
-      `),
-            window.SP_REACT.createElement("div", { className: "deckshare-plugin__guide-container" },
-                window.SP_REACT.createElement(Scrollable, { ref: ref },
-                    window.SP_REACT.createElement(ScrollArea, { scrollable: ref },
-                        window.SP_REACT.createElement("div", { dangerouslySetInnerHTML: { __html: mdIt.render(content) } }))))));
-    };
 
     const Content = ({}) => {
         const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
         const [ webhookUrl, setWebhookUrl ] = React.useState();
+        const [ isError, setIsError ] = React.useState(false);
+        const [ isLoadingUrl, setIsLoadingUrl ] = React.useState(false);
         const tries = React.useRef(0);
 
         async function saveWebhookUrl(webhookUrl) {
+          setIsLoadingUrl(true);
           await PyInterop.setWebhookUrl(webhookUrl).then((res) => {
-            setWebhookUrl(res.result);
+            if (res.result.toLowerCase().includes("invalid")) {
+              setIsError(res.result);
+            }else{
+              setIsError(false);
+              setWebhookUrl(res.result);
+            }
+            setIsLoadingUrl(false);
           });
         }
 
         async function reload() {
           try{
 
-            await PyInterop.getWebhookUrl().then((res) => {
-              setWebhookUrl(res.result);
-            });
+            await loadWebhookUrl(true);
 
             await PyInterop.getScreenshots().then((res) => {
                 setScreenshots(res.result);
@@ -15214,6 +15194,25 @@
             PyInterop.log("Error in reload: " + e);
           }
         }
+
+        async function loadWebhookUrl(force=true) {
+          if (((webhookUrl == "" || webhookUrl == null || webhookUrl == "False") && isLoadingUrl == false) || force == true) {
+            setIsLoadingUrl(true);
+            await PyInterop.getWebhookUrl().then((res) => {
+
+              if (res.result.toLowerCase().includes("invalid")) {
+                setIsError(res.result);
+              }else{
+                setIsError(false);
+                setWebhookUrl(res.result);
+              }
+              setIsLoadingUrl(false);
+            });
+          }
+        }
+
+        loadWebhookUrl(false);
+
         if (Object.values(screenshots).length === 0 && tries.current < 10) {
             reload();
             tries.current++;
@@ -15244,75 +15243,33 @@
         }
       `),
             window.SP_REACT.createElement("div", { className: "deckshare-plugin-scope" },
-                window.SP_REACT.createElement(PanelSection, null,
-                    //window.SP_REACT.createElement(PanelSectionRow, null, window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: () => { Navigation.CloseSideMenus(); Navigation.Navigate("/deckshare-plugin-config"); } }, "Plugin Config")),
-                    
+                window.SP_REACT.createElement(PanelSection, null,                    
                     window.SP_REACT.createElement(PanelSectionRow, null,
-                      window.SP_REACT.createElement(Field, { description: window.SP_REACT.createElement(TextField, { label: 'Webhook URL', value: webhookUrl, onChange: (e) => { setWebhookUrl(e?.target.value); } }) })),
-                      window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: () => { saveWebhookUrl(webhookUrl) } }, "Save Config"),
-                    (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 10px", fontSize: "12px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
+                      window.SP_REACT.createElement(Field, { description: window.SP_REACT.createElement(TextField, { description: window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: () => { saveWebhookUrl(webhookUrl) } }, "Save Config"), label: 'Webhook URL', value: webhookUrl, onChange: (e) => { setWebhookUrl(e?.target.value); } }) },)),
+                      (isError) ? (window.SP_REACT.createElement(PanelSectionRow, null,
+                        window.SP_REACT.createElement(Field, { description: isError.toString(), layout: "below" }, ""))) : (""),
+                    
+                      (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 10px", fontSize: "12px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
                         screenshotsList.map((itm) => (window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))),
+
+                        
                         window.SP_REACT.createElement(PanelSectionRow, null,
-                            window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: reload }, "Reload"))))))));
+                            window.SP_REACT.createElement(ButtonItem, { description: "Refresh the plugin", layout: "below", onClick: reload }, "Refresh")),
+                        window.SP_REACT.createElement(PanelSectionRow, null,
+                          window.SP_REACT.createElement(Field, { label: "Created with ❤️ by SmugZombie", layout: "below" }, "")),
+                        window.SP_REACT.createElement(PanelSectionRow, null,
+                          window.SP_REACT.createElement(Field, { label: "More Info: https://deckshare.zip", layout: "below" }, ""))
+                        
+                            
+                            
+                            ))))));
     };
-    const ScreenshotsManagerRouter = ({ guides }) => {
-        try{
-          const guidePages = {};
-          PyInterop.log("Guides:", guides);
-          Object.entries(guides).map(([guideName, guide]) => {
-            PyInterop.log(guideName)
-            guidePages[guideName] = {
-                title: guideName,
-                content: window.SP_REACT.createElement(GuidePage, { content: guide }),
-                route: `/deckshare-plugin-config/guides-${guideName.toLowerCase().replace(/ /g, "-")}`,
-                icon: window.SP_REACT.createElement(MdNumbers, null),
-                hideTitle: true
-            };
-          });
-        }catch(e){
-          PyInterop.log("Guides ERROR:" + e)
-        }
-        
-        return (window.SP_REACT.createElement(SidebarNavigation, { title: "Plugin Config", showTitle: true, pages: [
-                {
-                    title: "Add Screenshot",
-                    content: window.SP_REACT.createElement(AddScreenshot, null),
-                    route: "/deckshare-plugin-config/add",
-                    icon: window.SP_REACT.createElement(HiViewGridAdd, null)
-                },
-                {
-                    title: "Manage Screenshots",
-                    content: window.SP_REACT.createElement(ManageScreenshots, null),
-                    route: "/deckshare-plugin-config/manage",
-                    icon: window.SP_REACT.createElement(FaEdit, null)
-                },
-                {
-                    title: "Settings",
-                    content: window.SP_REACT.createElement(Settings, null),
-                    route: "/deckshare-plugin-config/settings",
-                    icon: window.SP_REACT.createElement(IoSettingsSharp, null)
-                },
-                "separator",
-                guidePages["Overview"],
-                guidePages["Managing Screenshots"],
-                guidePages["Custom Scripts"],
-                guidePages["Using Hooks"]
-            ] }));
-    };
+    
     var index = definePlugin((serverApi) => {
         PyInterop.setServer(serverApi);
         const state = new ScreenshotsState();
         PluginController.setup(serverApi, state);
         const loginHook = PluginController.initOnLogin();
-        /*try{
-          PyInterop.getGuides().then((res) => {
-            const guides = res.result;
-            serverApi.routerHook.addRoute("/deckshare-plugin-config", () => (window.SP_REACT.createElement(ScreenshotsContextProvider, { screenshotsStateClass: state },
-                window.SP_REACT.createElement(ScreenshotsManagerRouter, { guides: guides }))));
-          });
-        }catch(e){
-          PyInterop.log("Guides ERROR:" + e)
-        }*/
         
         return {
             title: window.SP_REACT.createElement("div", { className: staticClasses.Title }, "DeckShare Screenshots"),
