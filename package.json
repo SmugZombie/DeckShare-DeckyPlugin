@@ -1,0 +1,63 @@
+{
+  "name": "deckshare-deckyplugin",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "shx rm -rf dist && rollup -c",
+    "watch": "rollup -c -w",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "createDist": "rsync -r --exclude \"src/\" --exclude \"__pycache__\" --exclude \"node_modules\" /plugin/ /out/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SmugZombie/DeckShare-DeckyPlugin.git"
+  },
+  "keywords": [
+    "decky",
+    "plugin",
+    "steam-deck",
+    "deck",
+    "discord",
+    "screenshot"
+  ],
+  "author": {
+    "name": "SmugZombie",
+    "email": "github@r-egli.com"
+  },
+  "license": "GPL-2.0-or-later",
+  "bugs": {
+    "url": "https://github.com/SmugZombie/DeckShare-DeckyPlugin/issues"
+  },
+  "homepage": "https://github.com/SmugZombie/DeckShare-DeckyPlugin#readme",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^21.1.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-replace": "^4.0.0",
+    "@rollup/plugin-typescript": "^8.5.0",
+    "@types/markdown-it": "^12.2.3",
+    "@types/marked": "^4.3.0",
+    "@types/react": "16.14.0",
+    "@types/uuid": "^8.3.4",
+    "@types/webpack": "^5.28.1",
+    "markdown-it": "^13.0.1",
+    "rollup": "^2.79.1",
+    "rollup-plugin-import-assets": "^1.1.1",
+    "shx": "^0.3.4",
+    "tslib": "^2.5.0",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "decky-frontend-lib": "^3.20.7",
+    "react-icons": "^4.8.0",
+    "uuid": "^9.0.0"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "react",
+        "react-dom"
+      ]
+    }
+  }
+}

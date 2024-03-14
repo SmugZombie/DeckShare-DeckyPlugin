@@ -1,0 +1,10 @@
+{
+  "name": "DeckShare",
+  "author": "SmugZombie",
+  "flags": [],
+  "publish": {
+    "tags": ["screenshot", "convenience", "discord"],
+    "description": "",
+    "image": "https://raw.githubusercontent.com/SmugZombie/DeckShare-DeckyPlugin/main/assets/thumbnail.png"
+  }
+}
