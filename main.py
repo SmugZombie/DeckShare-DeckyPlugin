@@ -27,7 +27,7 @@ class Plugin:
   settingsManager = SettingsManager(name='DeckShare', settings_directory=pluginSettingsDir)
   steamdir = "/home/deck/.local/share/Steam/"
   guides = {}
-  discordWebhookURL = ""
+  discordWebhookURLBase = "https://discord.com/api/webhooks/"
 
   async def getWebhookUrl(self):
     try:
@@ -35,6 +35,8 @@ class Plugin:
       #  self.discordWebhookURL = file.readline().strip()
       #log("Getting Discord Webhook: " + self.discordWebhookURL)
       self.discordWebhookURL = str(await self.getSetting(self, 'discordWebhook', ''))
+      if(self.discordWebhookURL == ""):
+        self.discordWebhookURL = self.discordWebhookURLBase
       log("Storage Discord Webhook: " + self.discordWebhookURL)
       return self.discordWebhookURL
     except Exception as e:
@@ -105,12 +107,12 @@ class Plugin:
 
     if "webSocketPort" not in self.settingsManager.settings:
       log("No WebSocket port detected in settings.")
-      self.settingsManager.setSetting("webSocketPort", "5000")
-      log("Set WebSocket port to default; \"5000\"")
+      self.settingsManager.setSetting("webSocketPort", "5050")
+      log("Set WebSocket port to default; \"5050\"")
     else:
       log(f"WebSocket port loaded from settings. Port: {self.settingsManager.getSetting('webSocketPort', '')}")
       
-    self.jsInteropManager = JsInteropManager("localhost", self.settingsManager.getSetting("webSocketPort", "5000"))
+    self.jsInteropManager = JsInteropManager("localhost", self.settingsManager.getSetting("webSocketPort", "5050"))
     self.instanceManager = InstanceManager(0.25, self.jsInteropManager)
 
     #* start websocket server

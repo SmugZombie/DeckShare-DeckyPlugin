@@ -2339,7 +2339,7 @@
             this.state = state;
             this.steamController = new SteamController();
             this.screenshotsController = new ScreenshotsController(this.steamController);
-            this.webSocketClient = new WebSocketClient("localhost", "5000", 1000);
+            this.webSocketClient = new WebSocketClient("localhost", "5050", 1000);
             this.instancesController = new InstancesController(this.screenshotsController, this.webSocketClient, this.state);
             this.hooksController = new HookController(this.steamController, this.instancesController, this.webSocketClient, this.state);
             this.gameLifetimeRegister = this.steamController.registerForAllAppLifetimeNotifications((appId, data) => {
@@ -2397,7 +2397,7 @@
             PyInterop.log("PluginController initializing...");
             this.webSocketClient.connect();
             const webhookUrl = (await PyInterop.getWebhookUrl()).result;
-            if (webhookUrl == "" || webhookUrl == null || webhookUrl == "False") {
+            if (webhookUrl == "" || webhookUrl == null || webhookUrl == "False" || webhookUrl == "https://discord.com/api/webhooks/") {
               PyInterop.log("Please configure the webhook url in the plugin settings.")
               PyInterop.toast("DeckShare", "Please configure the webhook url in the plugin settings.");
             }
