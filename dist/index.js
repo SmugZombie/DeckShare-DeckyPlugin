@@ -15192,6 +15192,7 @@
     const Content = ({}) => {
         const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
         const [ webhookUrl, setWebhookUrl ] = React.useState();
+        const [ isLoadingUrl, setIsLoadingUrl ] = React.useState(false);
         const tries = React.useRef(0);
 
         async function saveWebhookUrl(webhookUrl) {
@@ -15203,9 +15204,7 @@
         async function reload() {
           try{
 
-            await PyInterop.getWebhookUrl().then((res) => {
-              setWebhookUrl(res.result);
-            });
+            await loadWebhookUrl(true);
 
             await PyInterop.getScreenshots().then((res) => {
                 setScreenshots(res.result);
@@ -15214,6 +15213,19 @@
             PyInterop.log("Error in reload: " + e);
           }
         }
+
+        async function loadWebhookUrl(force=true) {
+          if (((webhookUrl == "" || webhookUrl == null || webhookUrl == "False") && isLoadingUrl == false) || force == true) {
+            setIsLoadingUrl(true);
+            await PyInterop.getWebhookUrl().then((res) => {
+              setWebhookUrl(res.result);
+              setIsLoadingUrl(false);
+            });
+          }
+        }
+
+        loadWebhookUrl(false);
+
         if (Object.values(screenshots).length === 0 && tries.current < 10) {
             reload();
             tries.current++;
