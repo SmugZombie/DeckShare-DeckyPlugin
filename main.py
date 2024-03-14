@@ -1,8 +1,6 @@
 #!/usr/bin/env python
-import json
 import os
 import sys
-import glob
 import ssl
 
 sys.path.append(os.path.dirname(__file__))
@@ -29,15 +27,42 @@ class Plugin:
   guides = {}
   discordWebhookURLBase = "https://discord.com/api/webhooks/"
 
+  async def validateWebhookUrl(self, webhookUrl):
+    try:
+      log("Checking Webhook URL:" + webhookUrl)
+      if(webhookUrl == "" or webhookUrl == False or webhookUrl == "https://discord.com/api/webhooks/"):
+        log("No Valid Webhook URL Found")
+        return False
+      # Separate the host and the path of the URL
+      from urllib.parse import urlparse
+      parsed_url = urlparse(webhookUrl)
+      host = parsed_url.netloc
+      path = parsed_url.path
+      # Create an unverified SSL context
+      context = ssl._create_unverified_context()
+
+      # Send the POST request
+      conn = http.client.HTTPSConnection(host, context=context)
+      conn.request('GET', path, "", {})
+      response = conn.getresponse()
+      if response.status == 200:
+        log(f"Successfully validated Webhook URL")
+        return True
+      else:
+        log(f"Failed to validate Webhook URL")
+      return False
+    except Exception as e:
+      log(f"An error occurred: {e}")
+      return False
+        
+
   async def getWebhookUrl(self):
     try:
-      #with open(self.pluginDirPath + '/discordwebhook', 'r') as file:
-      #  self.discordWebhookURL = file.readline().strip()
-      #log("Getting Discord Webhook: " + self.discordWebhookURL)
       self.discordWebhookURL = str(await self.getSetting(self, 'discordWebhook', ''))
       if(self.discordWebhookURL == ""):
+      
         self.discordWebhookURL = self.discordWebhookURLBase
-      log("Storage Discord Webhook: " + self.discordWebhookURL)
+      #log("Storage Discord Webhook: " + self.discordWebhookURL)
       return self.discordWebhookURL
     except Exception as e:
       log(f"An error occurred: {e}")
@@ -45,10 +70,13 @@ class Plugin:
       
   async def setWebhookUrl(self, webhookUrl):
     try:
-      #with open(self.pluginDirPath + '/discordwebhook', 'w') as file:
-      #  file.write(webhookUrl)
+
+      if(await self.validateWebhookUrl(self, webhookUrl) == False):
+        log("Invalid Webhook URL")
+        return "Invalid Webhook URL"
+
       self.discordWebhookURL = webhookUrl
-      log("Setting Discord Webhook: " + self.discordWebhookURL)
+      #log("Setting Discord Webhook: " + self.discordWebhookURL)
       await self.setSetting(self, 'discordWebhook', webhookUrl)
       return self.discordWebhookURL
     except Exception as e:
@@ -62,22 +90,6 @@ class Plugin:
         if users[id64]["MostRecent"] == "1":
             user = int(id64)
             return user
-
-  async def getGuides(self):
-    self._getGuides(self)
-    return self.guides
-
-  def _getGuides(self):
-    #log(self.guidesDirPath)
-    for guideFileName in os.listdir(self.guidesDirPath):
-      #log(guideFileName)
-      with open(os.path.join(self.guidesDirPath, guideFileName), 'r') as guideFile:
-        guideName = guideFileName.replace("_", " ").replace(".md", "")
-        self.guides[guideName] = "".join(guideFile.readlines())
-
-      #log(self.guides)
-
-    pass
   
   async def getSetting(self, key, defaultVal):
     return self.settingsManager.getSetting(key, defaultVal)
