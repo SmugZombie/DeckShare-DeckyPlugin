@@ -21,8 +21,7 @@ Upon installation and first load of the plugin you should see a Toast notificati
 
 3. Provide your [Discord webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) url and click Save
 4. 
-   ![image](https://github.com/SmugZombie/DeckShare-DeckyPlugin/assets/11764327/b72cb361-344a-4866-b20c-1e9211efd16e)
-
+   ![image](https://github.com/SmugZombie/DeckShare-DeckyPlugin/assets/11764327/a9eb0757-d9ab-489d-826c-799719e4be4f)
 
 The plugin should now be setup providing it was given a valid webhook url. At this point any future screenshots should automatically be uploaded and you will receive a confirmation toast notification.
 
