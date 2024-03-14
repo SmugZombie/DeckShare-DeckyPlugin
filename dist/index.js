@@ -673,6 +673,17 @@
           const res = await this.serverAPI.callPluginMethod("uploadScreenshot", { filepath: filepath});
           return res;
         }
+
+        static async getWebhookUrl() {
+          const res = await this.serverAPI.callPluginMethod("getWebhookUrl", {});
+          return res;
+        }
+
+        static async setWebhookUrl(webhookUrl) {
+          const res = await this.serverAPI.callPluginMethod("setWebhookUrl", { webhookUrl: webhookUrl});
+          return res;
+        }
+
         /**
          * Shows a toast message.
          * @param title The title of the toast.
@@ -932,7 +943,9 @@
         }
     }
     const ScreenshotsContext = React.createContext(null);
+    const WebhookContext = React.createContext('');
     const useScreenshotsState = () => React.useContext(ScreenshotsContext);
+    const useWebhookState = () => React.useContext(WebhookContext);
     const ScreenshotsContextProvider = ({ children, screenshotsStateClass }) => {
         const [publicState, setPublicState] = React.useState({
             ...screenshotsStateClass.getPublicState()
@@ -2383,6 +2396,11 @@
         static async init() {
             PyInterop.log("PluginController initializing...");
             this.webSocketClient.connect();
+            const webhookUrl = (await PyInterop.getWebhookUrl()).result;
+            if (webhookUrl == "" || webhookUrl == null || webhookUrl == "False") {
+              PyInterop.log("Please configure the webhook url in the plugin settings.")
+              PyInterop.toast("DeckShare", "Please configure the webhook url in the plugin settings.");
+            }
             const screenshots = (await PyInterop.getScreenshots()).result;
             if (typeof screenshots === "string") {
                 PyInterop.log(`Failed to get screenshots for hooks. Error: ${screenshots}`);
@@ -15173,11 +15191,28 @@
 
     const Content = ({}) => {
         const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
+        const [ webhookUrl, setWebhookUrl ] = React.useState();
         const tries = React.useRef(0);
+
+        async function saveWebhookUrl(webhookUrl) {
+          await PyInterop.setWebhookUrl(webhookUrl).then((res) => {
+            setWebhookUrl(res.result);
+          });
+        }
+
         async function reload() {
+          try{
+
+            await PyInterop.getWebhookUrl().then((res) => {
+              setWebhookUrl(res.result);
+            });
+
             await PyInterop.getScreenshots().then((res) => {
                 setScreenshots(res.result);
             });
+          }catch(e){  
+            PyInterop.log("Error in reload: " + e);
+          }
         }
         if (Object.values(screenshots).length === 0 && tries.current < 10) {
             reload();
@@ -15210,8 +15245,12 @@
       `),
             window.SP_REACT.createElement("div", { className: "deckshare-plugin-scope" },
                 window.SP_REACT.createElement(PanelSection, null,
-                    window.SP_REACT.createElement(PanelSectionRow, null, window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: () => { Navigation.CloseSideMenus(); Navigation.Navigate("/deckshare-plugin-config"); } }, "Plugin Config")),
-                    (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
+                    //window.SP_REACT.createElement(PanelSectionRow, null, window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: () => { Navigation.CloseSideMenus(); Navigation.Navigate("/deckshare-plugin-config"); } }, "Plugin Config")),
+                    
+                    window.SP_REACT.createElement(PanelSectionRow, null,
+                      window.SP_REACT.createElement(Field, { description: window.SP_REACT.createElement(TextField, { label: 'Webhook URL', value: webhookUrl, onChange: (e) => { setWebhookUrl(e?.target.value); } }) })),
+                      window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: () => { saveWebhookUrl(webhookUrl) } }, "Save Config"),
+                    (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 10px", fontSize: "12px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
                         screenshotsList.map((itm) => (window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))),
                         window.SP_REACT.createElement(PanelSectionRow, null,
                             window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: reload }, "Reload"))))))));

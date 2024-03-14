@@ -17,17 +17,41 @@ from settings import SettingsManager
 from py_backend.logger import log
 
 Initialized = False
-discordWebhookURL = "https://discord.com/api/webhooks/1176344361219395674/Gw4C7-aJ6u-V7pu_57yAOwg_9ZqeiLedball1KW_gc54JO8dPBO1ZP_cHNbfCi5ZRRmH"
 
 class Plugin:
   log(f"Plugin loaded. User: {os.environ['DECKY_USER']}")
-  log(f"Discord Webhook: {discordWebhookURL}")
   pluginUser = os.environ["DECKY_USER"]
   pluginSettingsDir = os.environ["DECKY_PLUGIN_SETTINGS_DIR"]
+  pluginDirPath = os.path.dirname(__file__)
   guidesDirPath = f"/home/{pluginUser}/homebrew/plugins/deckshare-plugin/guides"
   settingsManager = SettingsManager(name='DeckShare', settings_directory=pluginSettingsDir)
   steamdir = "/home/deck/.local/share/Steam/"
   guides = {}
+  discordWebhookURL = ""
+
+  async def getWebhookUrl(self):
+    try:
+      #with open(self.pluginDirPath + '/discordwebhook', 'r') as file:
+      #  self.discordWebhookURL = file.readline().strip()
+      #log("Getting Discord Webhook: " + self.discordWebhookURL)
+      self.discordWebhookURL = str(await self.getSetting(self, 'discordWebhook', ''))
+      log("Storage Discord Webhook: " + self.discordWebhookURL)
+      return self.discordWebhookURL
+    except Exception as e:
+      log(f"An error occurred: {e}")
+      return False
+      
+  async def setWebhookUrl(self, webhookUrl):
+    try:
+      #with open(self.pluginDirPath + '/discordwebhook', 'w') as file:
+      #  file.write(webhookUrl)
+      self.discordWebhookURL = webhookUrl
+      log("Setting Discord Webhook: " + self.discordWebhookURL)
+      await self.setSetting(self, 'discordWebhook', webhookUrl)
+      return self.discordWebhookURL
+    except Exception as e:
+      log(f"An error occurred: {e}")
+      return False
 
   def GetSteamId(self):
     d = vdf.parse(open("{0}config/loginusers.vdf".format(self.steamdir), encoding="utf-8"))
@@ -119,10 +143,13 @@ class Plugin:
 
   async def uploadScreenshot(self, filepath):
     try:
+        if(self.discordWebhookURL == "" or self.discordWebhookURL == False):
+          log("No Valid Webhook URL Found")
+          return False
         log("UploadScreenshots called")
         newestScreenshot = filepath
         log("Newest Screenshot" + newestScreenshot)
-        status = await upload_file(newestScreenshot, discordWebhookURL)
+        status = await upload_file(newestScreenshot, self.discordWebhookURL)
         log(status)
         return status
     except Exception as e:
@@ -131,10 +158,13 @@ class Plugin:
 
   async def uploadScreenshots(self):
     try:
+        if(self.discordWebhookURL == "" or self.discordWebhookURL == False):
+          log("No Valid Webhook URL Found")
+          return False
         log("UploadScreenshots called")
         newestScreenshot = get_newest_jpg(self)
         log("Newest Screenshot" + newestScreenshot)
-        status = await upload_file(newestScreenshot, discordWebhookURL)
+        status = await upload_file(newestScreenshot, self.discordWebhookURL)
         log(status)
         return status
     except Exception as e:
