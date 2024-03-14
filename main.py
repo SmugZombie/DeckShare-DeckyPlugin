@@ -24,7 +24,7 @@ class Plugin:
   guidesDirPath = f"/home/{pluginUser}/homebrew/plugins/deckshare-plugin/guides"
   settingsManager = SettingsManager(name='DeckShare', settings_directory=pluginSettingsDir)
   steamdir = "/home/deck/.local/share/Steam/"
-  guides = {}
+  version = "0.0.3beta"
   discordWebhookURLBase = "https://discord.com/api/webhooks/"
 
   async def validateWebhookUrl(self, webhookUrl):
@@ -116,6 +116,7 @@ class Plugin:
     log("Initializing DeckShare Plugin")
 
     self.settingsManager.read()
+    self.settingsManager.setSetting("version", self.version)
 
     if "webSocketPort" not in self.settingsManager.settings:
       log("No WebSocket port detected in settings.")

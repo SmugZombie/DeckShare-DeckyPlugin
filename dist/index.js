@@ -15167,6 +15167,7 @@
         const [ webhookUrl, setWebhookUrl ] = React.useState();
         const [ isError, setIsError ] = React.useState(false);
         const [ isLoadingUrl, setIsLoadingUrl ] = React.useState(false);
+        const [ version, setVersion ] = React.useState("0.0.0");
         const tries = React.useRef(0);
 
         async function saveWebhookUrl(webhookUrl) {
@@ -15209,6 +15210,15 @@
               setIsLoadingUrl(false);
             });
           }
+        }
+
+        async function loadVersion() {
+          const version = await PyInterop.getSetting("version", "");
+          setVersion(version);
+        }
+
+        if(version == "0.0.0"){
+          loadVersion();
         }
 
         loadWebhookUrl(false);
@@ -15258,7 +15268,9 @@
                         window.SP_REACT.createElement(PanelSectionRow, null,
                           window.SP_REACT.createElement(Field, { label: "Created with ❤️ by SmugZombie", layout: "below" }, "")),
                         window.SP_REACT.createElement(PanelSectionRow, null,
-                          window.SP_REACT.createElement(Field, { label: "More Info: https://deckshare.zip", layout: "below" }, ""))
+                          window.SP_REACT.createElement(Field, { label: "More Info: https://deckshare.zip", layout: "below" }, "")),
+                        window.SP_REACT.createElement(PanelSectionRow, null,
+                          window.SP_REACT.createElement(Field, { label: "Version: " + version, layout: "below" }, ""))
                         
                             
                             
