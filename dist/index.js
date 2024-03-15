@@ -735,55 +735,6 @@
         static async setSetting(key, newVal) {
             return await this.serverAPI.callPluginMethod("setSetting", { key: key, newVal: newVal });
         }
-        /**
-         * Adds a new screenshot on the backend and returns the updated screenshots dictionary.
-         * @param screenshot The screenshot to add.
-         * @returns A promise resolving to a server response containing the updated screenshots dictionary.
-         */
-        static async addScreenshot(screenshot) {
-            return await this.serverAPI.callPluginMethod("addScreenshot", { screenshot: screenshot });
-        }
-        /**
-         * Sets the entire screenshots dictionary, and returns the updated dictionary.
-         * @param screenshots The updated screenshots dictionary.
-         * @returns A promise resolving to a server response containing the updated screenshots dictionary.
-         */
-        static async setScreenshots(screenshots) {
-            return await this.serverAPI.callPluginMethod("setScreenshots", { screenshots: screenshots });
-        }
-        /**
-         * Updates/edits a screenshot on the backend, and returns the updated dictionary.
-         * @param screenshot The screenshot to update.
-         * @returns A promise resolving to a server response containing the updated screenshots dictionary.
-         */
-        static async modScreenshot(screenshot) {
-            return await this.serverAPI.callPluginMethod("modScreenshot", { screenshot: screenshot });
-        }
-        /**
-         * Removes a screenshot on the backend and returns the updated screenshots dictionary.
-         * @param screenshot The screenshot to remove.
-         * @returns A promise resolving to a server response containing the updated screenshots dictionary.
-         */
-        static async remScreenshot(screenshot) {
-            return await this.serverAPI.callPluginMethod("remScreenshot", { screenshot: screenshot });
-        }
-        /**
-         * Runs a non app screenshot.
-         * @param screenshotId The id of the screenshot to run.
-         * @param flags Optional tuple array of flags to pass to the screenshot.
-         */
-        static async runNonAppScreenshot(screenshotId, flags) {
-            const successful = await this.serverAPI.callPluginMethod("runNonAppScreenshot", { screenshotId: screenshotId, flags: flags });
-            return successful;
-        }
-        /**
-         * Kills a non app screenshot.
-         * @param screenshotId The id of the screenshot to kill.
-         */
-        static async killNonAppScreenshot(screenshotId) {
-            const successful = await this.serverAPI.callPluginMethod("killNonAppScreenshot", { screenshotId: screenshotId });
-            return successful;
-        }
     }
 
     /**
@@ -794,19 +745,13 @@
          * Creates a new Screenshot.
          * @param id The id of the screenshot.
          * @param name The name/lable of the screenshot.
-         * @param cmd The command the screenshot runs.
          * @param position The position of the screenshot in the list of screenshots.
-         * @param isApp Whether the screenshot is an app or not.
-         * @param passFlags Whether the screenshot takes flags or not.
          * @param hooks The list of hooks for this screenshot.
          */
-        constructor(id, name, cmd, position, isApp, passFlags, hooks) {
+        constructor(id, name, position, hooks) {
             this.id = id;
             this.name = name;
-            this.cmd = cmd;
             this.position = position;
-            this.isApp = isApp;
-            this.passFlags = passFlags;
             this.hooks = hooks;
         }
         /**
@@ -904,24 +849,6 @@
                 "gameRunning": this.gameRunning
             };
         }
-        setIsRunning(screenshotId, value) {
-            if (value) {
-                this.runningScreenshots.add(screenshotId);
-            }
-            else {
-                this.runningScreenshots.delete(screenshotId);
-            }
-            this.runningScreenshots = new Set(this.runningScreenshots.values());
-            this.forceUpdate();
-        }
-        setCurrentGame(overview) {
-            this.currentGame = overview;
-            this.forceUpdate();
-        }
-        setGameRunning(isRunning) {
-            this.gameRunning = isRunning;
-            this.forceUpdate();
-        }
         setScreenshots(screenshots) {
             this.screenshots = screenshots;
             this.screenshotsList = Object.values(this.screenshots).sort((a, b) => a.position - b.position);
@@ -964,21 +891,9 @@
         const setScreenshots = (screenshots) => {
             screenshotsStateClass.setScreenshots(screenshots);
         };
-        const setIsRunning = (screenshotId, value) => {
-            screenshotsStateClass.setIsRunning(screenshotId, value);
-        };
-        const setCurrentGame = (overview) => {
-            screenshotsStateClass.setCurrentGame(overview);
-        };
-        const setGameRunning = (isRunning) => {
-            screenshotsStateClass.setGameRunning(isRunning);
-        };
         return (window.SP_REACT.createElement(ScreenshotsContext.Provider, { value: {
                 ...publicState,
                 setScreenshots,
-                setIsRunning,
-                setCurrentGame,
-                setGameRunning
             } }, children));
     };
 
@@ -1096,11 +1011,30 @@
 
         async runScreenshots(hook, flags) {
           try{
+
+            const autoupload = await PyInterop.getSetting("autoupload", false);
+            const notifications = await PyInterop.getSetting("notifications", false);
+            const screenshotsTaken = await PyInterop.getSetting("screenshotsTaken", 0);
+            const screenshotsShared = await PyInterop.getSetting("screenshotsShared", 0);
+
+            await PyInterop.setSetting("screenshotsTaken", screenshotsTaken + 1);
+            if(autoupload == 1 || autoupload == "1" || autoupload == "true" || autoupload == true){
+              // Proceed
+            }else{
+              PyInterop.log("Screenshot detected but auto upload is disabled");
+              return;
+            }
+
             let uploadStatus = await PyInterop.uploadScreenshots();
             if(uploadStatus.result == 200 || uploadStatus.result == "200"){
-              PyInterop.toast("Deckshare Info","Screenshots shared successfully");
+              await PyInterop.setSetting("screenshotsShared", screenshotsShared + 1);
+              if(notifications){
+                PyInterop.toast("Deckshare Info","Screenshots shared successfully");
+              }
             }else{
-              PyInterop.toast("DeckShare Error", "Screenshots failed to upload");
+              if(notifications){
+                PyInterop.toast("DeckShare Error", "Screenshots failed to upload");
+              }
               PyInterop.log(JSON.stringify(uploadStatus));
             }
             return true;
@@ -1215,127 +1149,6 @@
             }
             else {
                 return null;
-            }
-        }
-        /**
-         * Checks if a screenshot exists.
-         * @param name The name of the screenshot to check for.
-         * @returns A promise resolving to true if the screenshot was found.
-         */
-        async checkScreenshotExist(name) {
-            const screenshotsArr = await this.steamController.getScreenshot(name);
-            return screenshotsArr.length > 0;
-        }
-        /**
-         * Checks if a screenshot exists.
-         * @param appId The id of the screenshot to check for.
-         * @returns A promise resolving to true if the screenshot was found.
-         */
-        async checkScreenshotExistById(appId) {
-            const screenshotsArr = await this.steamController.getScreenshotById(appId);
-            return screenshotsArr[0]?.unAppID != 0;
-        }
-        /**
-         * Sets the exe of a steam screenshot.
-         * @param appId The id of the app to set.
-         * @param exec The new value for the exe.
-         * @returns A promise resolving to true if the exe was set successfully.
-         */
-        async setScreenshotExe(appId, exec) {
-            return await this.steamController.setScreenshotExe(appId, exec);
-        }
-        /**
-         * Sets the start dir of a steam screenshot.
-         * @param appId The id of the app to set.
-         * @param startDir The new value for the start dir.
-         * @returns A promise resolving to true if the start dir was set successfully.
-         */
-        async setScreenshotStartDir(appId, startDir) {
-            return await this.steamController.setScreenshotStartDir(appId, startDir);
-        }
-        /**
-         * Sets the launch options of a steam screenshot.
-         * @param appId The id of the app to set.
-         * @param launchOpts The new value for the launch options.
-         * @returns A promise resolving to true if the launch options was set successfully.
-         */
-        async setScreenshotLaunchOptions(appId, launchOpts) {
-            return await this.steamController.setAppLaunchOptions(appId, launchOpts);
-        }
-        /**
-         * Sets the name of a steam screenshot.
-         * @param appId The id of the app to set.
-         * @param newName The new name for the screenshot.
-         * @returns A promise resolving to true if the name was set successfully.
-         */
-        async setScreenshotName(appId, newName) {
-            return await this.steamController.setScreenshotName(appId, newName);
-        }
-        /**
-         * Launches a steam screenshot.
-         * @param appId The id of the steam screenshot to launch.
-         * @returns A promise resolving to true if the screenshot was successfully launched.
-         */
-        async launchScreenshot(appId) {
-            return await this.steamController.runGame(appId, false);
-        }
-        /**
-         * Closes a running screenshot.
-         * @param appId The id of the screenshot to close.
-         * @returns A promise resolving to true if the screenshot was successfully closed.
-         */
-        async closeScreenshot(appId) {
-            return await this.steamController.terminateGame(appId);
-        }
-        /**
-         * Creates a new steam screenshot.
-         * @param name The name of the screenshot to create.
-         * @param exec The executable file for the screenshot.
-         * @param startDir The start directory of the screenshot.
-         * @param launchArgs The launch args of the screenshot.
-         * @returns A promise resolving to true if the screenshot was successfully created.
-         */
-        async addScreenshot(name, exec, startDir, launchArgs) {
-            const appId = await this.steamController.addScreenshot(name, exec, startDir, launchArgs);
-            if (appId) {
-                return appId;
-            }
-            else {
-                PyInterop.log(`Failed to add screenshot. Name: ${name}`);
-                PyInterop.toast("Error", "Failed to add screenshot");
-                return null;
-            }
-        }
-        /**
-         * Deletes a screenshot from steam.
-         * @param name Name of the screenshot to delete.
-         * @returns A promise resolving to true if the screenshot was successfully deleted.
-         */
-        async removeScreenshot(name) {
-            const screenshot = await this.steamController.getScreenshot(name)[0];
-            if (screenshot) {
-                return await this.steamController.removeScreenshot(screenshot.unAppID);
-            }
-            else {
-                PyInterop.log(`Didn't find screenshot to remove. Name: ${name}`);
-                PyInterop.toast("Error", "Didn't find screenshot to remove.");
-                return false;
-            }
-        }
-        /**
-         * Deletes a screenshot from steam by id.
-         * @param appId The id of the screenshot to delete.
-         * @returns A promise resolving to true if the screenshot was successfully deleted.
-         */
-        async removeScreenshotById(appId) {
-            const res = await this.steamController.removeScreenshot(appId);
-            if (res) {
-                return true;
-            }
-            else {
-                PyInterop.log(`Failed to remove screenshot. AppId: ${appId}`);
-                PyInterop.toast("Error", "Failed to remove screenshot");
-                return false;
             }
         }
         /**
@@ -15063,121 +14876,33 @@
       return state.tokens;
     };
 
-
-    /**
-     * MarkdownIt.renderInline(src [, env]) -> String
-     * - src (String): source string
-     * - env (Object): environment sandbox
-     *
-     * Similar to [[MarkdownIt.render]] but for single paragraph content. Result
-     * will NOT be wrapped into `<p>` tags.
-     **/
-    MarkdownIt.prototype.renderInline = function (src, env) {
-      env = env || {};
-
-      return this.renderer.render(this.parseInline(src, env), this.options, env);
-    };
-
-
-    var lib = MarkdownIt;
-
-    var markdownIt = lib;
-
-    const DEFAULTSCROLLSPEED = 50;
-    function scrollableRef() {
-        return React.useRef(null);
-    }
-    const Scrollable = React__default["default"].forwardRef((props, ref) => {
-        if (!props.style) {
-            props.style = {};
-        }
-        // props.style.minHeight = '100%';
-        // props.style.maxHeight = '80%';
-        props.style.height = "95vh";
-        props.style.overflowY = "scroll";
-        return (window.SP_REACT.createElement(React__default["default"].Fragment, null,
-            window.SP_REACT.createElement("div", { ref: ref, ...props })));
-    });
-    // const writeLog = async (serverApi: ServerAPI, content: any) => {
-    // 	let text = `${content}`
-    // 	serverApi.callPluginMethod<{ content: string }>("log", { content: text })
-    // }
-    const scrollOnDirection = (e, ref, amt, prev, next) => {
-        let childNodes = ref.current?.childNodes;
-        let currentIndex = null;
-        childNodes?.forEach((node, i) => {
-            if (node == e.currentTarget) {
-                currentIndex = i;
-            }
-        });
-        // @ts-ignore
-        let pos = e.currentTarget?.getBoundingClientRect();
-        let out = ref.current?.getBoundingClientRect();
-        if (e.detail.button == GamepadButton.DIR_DOWN) {
-            if (out?.bottom != undefined &&
-                pos.bottom <= out.bottom &&
-                currentIndex != null &&
-                childNodes != undefined &&
-                currentIndex + 1 < childNodes.length) {
-                next.current?.focus();
-            }
-            else {
-                ref.current?.scrollBy({ top: amt, behavior: "smooth" });
-            }
-        }
-        else if (e.detail.button == GamepadButton.DIR_UP) {
-            if (out?.top != undefined &&
-                pos.top >= out.top &&
-                currentIndex != null &&
-                childNodes != undefined &&
-                currentIndex - 1 >= 0) {
-                prev.current?.focus();
-            }
-            else {
-                ref.current?.scrollBy({ top: -amt, behavior: "smooth" });
-            }
-        }
-    };
-    const ScrollArea = (props) => {
-        let scrollSpeed = DEFAULTSCROLLSPEED;
-        if (props.scrollSpeed) {
-            scrollSpeed = props.scrollSpeed;
-        }
-        const prevFocus = React.useRef(null);
-        const nextFocus = React.useRef(null);
-        props.onActivate = (e) => {
-            const ele = e.currentTarget;
-            ele.focus();
-        };
-        props.onGamepadDirection = (e) => {
-            scrollOnDirection(e, props.scrollable, scrollSpeed, prevFocus, nextFocus);
-        };
-        return (window.SP_REACT.createElement(React__default["default"].Fragment, null,
-            window.SP_REACT.createElement(Focusable, { ref: prevFocus, children: [], onActivate: () => { } }),
-            window.SP_REACT.createElement(Focusable, { ...props }),
-            window.SP_REACT.createElement(Focusable, { ref: nextFocus, children: [], onActivate: () => { } })));
-    };
-
-    const mdIt = new markdownIt({
-        html: true
-    });
-
     const Content = ({}) => {
         const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
         const [ webhookUrl, setWebhookUrl ] = React.useState();
         const [ isError, setIsError ] = React.useState(false);
         const [ isLoadingUrl, setIsLoadingUrl ] = React.useState(false);
+        const [ isSaving, setIsSaving ] = React.useState(false);
+        const [ isSaved, setIsSaved ] = React.useState(false);
         const [ version, setVersion ] = React.useState("0.0.0");
+        const [ autoUpload, setAutoUpload ] = React.useState(false);
+        const [ notifications, setNotifications ] = React.useState(false);
+        const [ screenshotsTaken, setScreenshotsTaken ] = React.useState(0);
+        const [ screenshotsShared, setScreenshotsShared ] = React.useState(0);
         const tries = React.useRef(0);
 
         async function saveWebhookUrl(webhookUrl) {
           setIsLoadingUrl(true);
+          setIsSaving(true);
+          setIsSaved(false);
           await PyInterop.setWebhookUrl(webhookUrl).then((res) => {
             if (res.result.toLowerCase().includes("invalid")) {
               setIsError(res.result);
             }else{
               setIsError(false);
               setWebhookUrl(res.result);
+              setIsSaving(false);
+              setIsSaved(true);
+              setTimeout(() => { setIsSaved(false); }, 3000);
             }
             setIsLoadingUrl(false);
           });
@@ -15186,7 +14911,7 @@
         async function reload() {
           try{
 
-            await loadWebhookUrl(true);
+            //await loadWebhookUrl(true);
 
             await PyInterop.getScreenshots().then((res) => {
                 setScreenshots(res.result);
@@ -15212,13 +14937,46 @@
           }
         }
 
-        async function loadVersion() {
-          const version = await PyInterop.getSetting("version", "");
-          setVersion(version);
+        async function toggleAutoUpload(value){
+          await PyInterop.setSetting("autoupload", value);
+          setAutoUpload(value);
+        }
+
+        async function toggleNotifications(value){
+          await PyInterop.setSetting("notifications", value);
+          setNotifications(value);
+        }
+
+        async function loadSettings() {
+          try{
+            const version = await PyInterop.getSetting("version", "0.0.0");
+            setVersion(version);
+            let autoupload = await PyInterop.getSetting("autoupload", "0");
+            if(autoupload == 1 || autoupload == "1" || autoupload == "true" || autoupload == true){
+              autoupload = true;
+            }else{
+              autoupload = false;
+            }
+            setAutoUpload(autoupload);
+            let notifications = await PyInterop.getSetting("notifications", "0");
+            if(notifications == 1 || notifications == "1" || notifications == "true" || notifications == true){
+              notifications = true;
+            }else{
+              notifications = false;
+            }
+            setNotifications(notifications);
+            const screenshotsTaken = await PyInterop.getSetting("screenshotsTaken", "0");
+            setScreenshotsTaken(screenshotsTaken);
+            const screenshotsShared = await PyInterop.getSetting("screenshotsShared", "0");
+            setScreenshotsShared(screenshotsShared);
+            setTimeout(async () => { await loadSettings(); reload(); }, 5000);
+          }catch(e){
+            PyInterop.log("Error in loadSettings: " + e);
+          }
         }
 
         if(version == "0.0.0"){
-          loadVersion();
+          loadSettings();
         }
 
         loadWebhookUrl(false);
@@ -15253,29 +15011,46 @@
         }
       `),
       window.SP_REACT.createElement("div", { className: "deckshare-plugin-scope" },
-        window.SP_REACT.createElement(PanelSection, null,                    
+        window.SP_REACT.createElement(PanelSection, { title: "settings" },                    
           window.SP_REACT.createElement(PanelSectionRow, null,
-            window.SP_REACT.createElement(TextField, { description: 
-              window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: () => { saveWebhookUrl(webhookUrl) } }, "Save Config"),
-              label: 'Webhook URL', value: webhookUrl, onChange: (e) => { setWebhookUrl(e?.target.value); } } 
-            ),
+            window.SP_REACT.createElement(ToggleField, { checked: autoUpload, label: "Auto Share", onChange: (value) => toggleAutoUpload(value) }),
+            window.SP_REACT.createElement(ToggleField, { checked: notifications, label: "Notifications", onChange: (value) => toggleNotifications(value) }),
+            window.SP_REACT.createElement(TextField, { value: webhookUrl, layout: "below", onChange: (e) => { setWebhookUrl(e?.target.value); } } ),
+            window.SP_REACT.createElement(ToggleField, { checked: isSaving, label: "Save Webhook Url", onChange: (e) => { saveWebhookUrl(webhookUrl); } }),
+            //window.SP_REACT.createElement(ButtonItem, { layout: "below", onClick: () => saveWebhookUrl(webhookUrl) }, "Save"),
             (isError) ? (
-              window.SP_REACT.createElement(Field, { description: isError.toString(), layout: "below" }, "")) : (""),
-
+              window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 10px", fontSize: "12px", color: "red" } }, isError.toString())) : (""),
+            (isSaving) ? (
+              window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 10px", fontSize: "12px", color: "yellow" } }, "Validating Webhook URL")) : (""),
+            (isSaved) ? (
+              window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 10px", fontSize: "12px", color: "green" } }, "Successfully Saved Webhook URL")) : (""),
+          )),
+          window.SP_REACT.createElement(PanelSection, { title: "Recent Screenshots", onClick: reload },                    
+          window.SP_REACT.createElement(PanelSectionRow, null,
               (screenshotsList.length == 0) ? (
                 window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 10px", fontSize: "12px" } }, "No screenshots found")) : (
                   window.SP_REACT.createElement(React.Fragment, null, screenshotsList.map((itm) => (
                     window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))))),
-
-              window.SP_REACT.createElement(ButtonItem, { description: "Refresh the plugin", layout: "below", onClick: reload }, "Refresh"),
-              window.SP_REACT.createElement(Field, { label: "Created with ❤️ by SmugZombie", layout: "below" }, ""),
-              window.SP_REACT.createElement(Field, { label: "More Info: https://deckshare.zip", layout: "below" }, ""),
-              window.SP_REACT.createElement(Field, { label: "Version: " + version, layout: "below" }, ""),
-
+          )),
+          window.SP_REACT.createElement(PanelSection, { title: "Credits" },                    
+            window.SP_REACT.createElement(PanelSectionRow, null,
+                //window.SP_REACT.createElement(ButtonItem, { description: "Refresh the plugin", layout: "below", onClick: reload }, "Refresh"),
+                window.SP_REACT.createElement(Field, { label: "Created with ❤️ by SmugZombie", layout: "below" }, ""),
+                window.SP_REACT.createElement(Field, { label: "More Info: https://deckshare.zip", layout: "below" }, ""),
+                window.SP_REACT.createElement(Field, { label: "Version: " + version, layout: "below" }, ""),
+            ),
+            
           ),
+          window.SP_REACT.createElement(PanelSection, { title: "Stats" },                    
+            window.SP_REACT.createElement(PanelSectionRow, null,
+              window.SP_REACT.createElement(Field, { label: `Screenshots Taken: ${screenshotsTaken}`, layout: "below" }, ),
+              window.SP_REACT.createElement(Field, { label: `Screenshots Shared: ${screenshotsShared}`, layout: "below" }, ),
+            ),
             
-            
-          ))));
+          ),
+          
+          
+          )));
     };
     
     var index = definePlugin((serverApi) => {
