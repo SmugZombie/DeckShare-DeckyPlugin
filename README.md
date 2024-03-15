@@ -35,3 +35,8 @@ Additionally you can see a list of the latest 5 screenshots in order from newest
 
 # Future
 1. Add additional endpoints (Imgur? Another folder on the device for use with a cloud service sync?)
+
+
+# Give Thanks
+
+Like this plugin? [Buy me a beer!](https://www.paypal.com/paypalme/regli)
