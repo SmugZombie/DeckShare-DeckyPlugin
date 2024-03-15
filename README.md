@@ -9,7 +9,7 @@ This is an expansion upon the original project I made here: [DeckShare](https://
 1. [Install the Decky plugin loader](https://github.com/SteamDeckHomebrew/decky-loader#installation)
 2. ~~Use the built in plugin store to download the DeckShare plugin~~ (Not on the store yet)
 2. Enable Developer Mode in Decky
-3. Grab the URL or download the latest release from the releases Page
+3. Grab the URL or download the latest release from the [releases Page](https://github.com/SmugZombie/DeckShare-DeckyPlugin/releases)
 4. Provide the URL or File to Decky and install
 
 # Using the plugin
