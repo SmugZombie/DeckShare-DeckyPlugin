@@ -24,7 +24,7 @@ class Plugin:
   guidesDirPath = f"/home/{pluginUser}/homebrew/plugins/deckshare-plugin/guides"
   settingsManager = SettingsManager(name='DeckShare', settings_directory=pluginSettingsDir)
   steamdir = "/home/deck/.local/share/Steam/"
-  version = "0.0.3beta"
+  version = "0.0.4beta"
   discordWebhookURLBase = "https://discord.com/api/webhooks/"
 
   async def validateWebhookUrl(self, webhookUrl):
@@ -143,9 +143,10 @@ class Plugin:
     url = "{0}userdata/{1}/760/remote/".format(self.steamdir, user & 0xFFFFFFFF)
 
     for root, dirs, files in os.walk(url):
+      if "thumbnails" not in root:
         for file in files:
-            if file.endswith(".jpg"):
-                screenshots[file] = {'path': os.path.join(root, file), 'name': file, 'id': file}
+          if file.endswith(".jpg"):
+            screenshots[file] = {'path': os.path.join(root, file), 'name': file, 'id': file}
 
     # Convert the dictionary to a list of tuples and sort it based on the file name
     sorted_screenshots = sorted(screenshots.items(), key=lambda x: x[0], reverse=True)
