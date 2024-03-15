@@ -9,7 +9,7 @@ This is an expansion upon the original project I made here: [DeckShare](https://
 1. [Install the Decky plugin loader](https://github.com/SteamDeckHomebrew/decky-loader#installation)
 2. ~~Use the built in plugin store to download the DeckShare plugin~~ (Not on the store yet)
 2. Enable Developer Mode in Decky
-3. Grab the URL or download the latest release from the releases Page
+3. Grab the URL or download the latest release from the [releases Page](https://github.com/SmugZombie/DeckShare-DeckyPlugin/releases)
 4. Provide the URL or File to Decky and install
 
 # Using the plugin
@@ -19,9 +19,12 @@ Upon installation and first load of the plugin you should see a Toast notificati
 2. 
    ![image](https://github.com/SmugZombie/DeckShare-DeckyPlugin/assets/11764327/caed3493-5f39-4380-b19b-923ecb3fb5b4)
 
-3. Provide your [Discord webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) url and click Save
+3. Provide your [Discord webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) url and click Save. You can now choose to automatically share new screenshots, disable/enable notifications of when screenshots are shared, and view your screenshot statistics.
 4. 
-   ![image](https://github.com/SmugZombie/DeckShare-DeckyPlugin/assets/11764327/a9eb0757-d9ab-489d-826c-799719e4be4f)
+   ![image](https://github.com/SmugZombie/DeckShare-DeckyPlugin/assets/11764327/d975e73b-4eec-4789-9d90-2347d6bc3f33)
+
+   ![image](https://github.com/SmugZombie/DeckShare-DeckyPlugin/assets/11764327/170fdba9-6fd4-4a81-93cc-2191e8a49d51)
+
 
 The plugin should now be setup providing it was given a valid webhook url. At this point any future screenshots should automatically be uploaded and you will receive a confirmation toast notification.
 
