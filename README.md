@@ -10,7 +10,8 @@ This is an expansion upon the original project I made here: [DeckShare](https://
 2. ~~Use the built in plugin store to download the DeckShare plugin~~ (Not on the store yet)
 2. Enable Developer Mode in Decky
 3. Grab the URL or download the latest release from the [releases Page](https://github.com/SmugZombie/DeckShare-DeckyPlugin/releases)
-4. Provide the URL or File to Decky and install
+4. For the time being... Please use the deckshare-plugin.zip attached to the release to deploy.. 
+5. Provide the URL or File to Decky and install
 
 # Using the plugin
 Upon installation and first load of the plugin you should see a Toast notification that says you need to complete setup of the plugin
