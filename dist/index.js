@@ -1014,15 +1014,20 @@
 
             const autoupload = await PyInterop.getSetting("autoupload", false);
             const notifications = await PyInterop.getSetting("notifications", false);
+            const screenshotsTaken = await PyInterop.getSetting("screenshotsTaken", 0);
+            const screenshotsShared = await PyInterop.getSetting("screenshotsShared", 0);
+
+            await PyInterop.setSetting("screenshotsTaken", screenshotsTaken + 1);
             if(autoupload == 1 || autoupload == "1" || autoupload == "true" || autoupload == true){
               // Proceed
             }else{
               PyInterop.log("Screenshot detected but auto upload is disabled");
               return;
             }
-            
+
             let uploadStatus = await PyInterop.uploadScreenshots();
             if(uploadStatus.result == 200 || uploadStatus.result == "200"){
+              await PyInterop.setSetting("screenshotsShared", screenshotsShared + 1);
               if(notifications){
                 PyInterop.toast("Deckshare Info","Screenshots shared successfully");
               }
@@ -14881,6 +14886,8 @@
         const [ version, setVersion ] = React.useState("0.0.0");
         const [ autoUpload, setAutoUpload ] = React.useState(false);
         const [ notifications, setNotifications ] = React.useState(false);
+        const [ screenshotsTaken, setScreenshotsTaken ] = React.useState(0);
+        const [ screenshotsShared, setScreenshotsShared ] = React.useState(0);
         const tries = React.useRef(0);
 
         async function saveWebhookUrl(webhookUrl) {
@@ -14904,7 +14911,7 @@
         async function reload() {
           try{
 
-            await loadWebhookUrl(true);
+            //await loadWebhookUrl(true);
 
             await PyInterop.getScreenshots().then((res) => {
                 setScreenshots(res.result);
@@ -14941,25 +14948,31 @@
         }
 
         async function loadSettings() {
-          const version = await PyInterop.getSetting("version", "");
-          setVersion(version);
-          const autoupload = await PyInterop.getSetting("autoupload", "0");
-          const notifications = await PyInterop.getSetting("notifications", "0");
-
-          if(autoupload == 1 || autoupload == "1" || autoupload == "true" || autoupload == true){
-            autoupload = true;
-          }else{
-            autoupload = false;
+          try{
+            const version = await PyInterop.getSetting("version", "0.0.0");
+            setVersion(version);
+            let autoupload = await PyInterop.getSetting("autoupload", "0");
+            if(autoupload == 1 || autoupload == "1" || autoupload == "true" || autoupload == true){
+              autoupload = true;
+            }else{
+              autoupload = false;
+            }
+            setAutoUpload(autoupload);
+            let notifications = await PyInterop.getSetting("notifications", "0");
+            if(notifications == 1 || notifications == "1" || notifications == "true" || notifications == true){
+              notifications = true;
+            }else{
+              notifications = false;
+            }
+            setNotifications(notifications);
+            const screenshotsTaken = await PyInterop.getSetting("screenshotsTaken", "0");
+            setScreenshotsTaken(screenshotsTaken);
+            const screenshotsShared = await PyInterop.getSetting("screenshotsShared", "0");
+            setScreenshotsShared(screenshotsShared);
+            setTimeout(async () => { await loadSettings(); reload(); }, 5000);
+          }catch(e){
+            PyInterop.log("Error in loadSettings: " + e);
           }
-          
-          if(notifications == 1 || notifications == "1" || notifications == "true" || notifications == true){
-            notifications = true;
-          }else{
-            notifications = false;
-          }
-
-          setAutoUpload(autoupload);
-          setNotifications(notifications);
         }
 
         if(version == "0.0.0"){
@@ -15012,7 +15025,7 @@
             (isSaved) ? (
               window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 10px", fontSize: "12px", color: "green" } }, "Successfully Saved Webhook URL")) : (""),
           )),
-          window.SP_REACT.createElement(PanelSection, { title: "Recent Screenshots" },                    
+          window.SP_REACT.createElement(PanelSection, { title: "Recent Screenshots", onClick: reload },                    
           window.SP_REACT.createElement(PanelSectionRow, null,
               (screenshotsList.length == 0) ? (
                 window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 10px", fontSize: "12px" } }, "No screenshots found")) : (
@@ -15020,14 +15033,24 @@
                     window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))))),
           )),
           window.SP_REACT.createElement(PanelSection, { title: "Credits" },                    
-          window.SP_REACT.createElement(PanelSectionRow, null,
-              //window.SP_REACT.createElement(ButtonItem, { description: "Refresh the plugin", layout: "below", onClick: reload }, "Refresh"),
-              window.SP_REACT.createElement(Field, { label: "Created with ❤️ by SmugZombie", layout: "below" }, ""),
-              window.SP_REACT.createElement(Field, { label: "More Info: https://deckshare.zip", layout: "below" }, ""),
-              window.SP_REACT.createElement(Field, { label: "Version: " + version, layout: "below" }, ""),
-          ),
+            window.SP_REACT.createElement(PanelSectionRow, null,
+                //window.SP_REACT.createElement(ButtonItem, { description: "Refresh the plugin", layout: "below", onClick: reload }, "Refresh"),
+                window.SP_REACT.createElement(Field, { label: "Created with ❤️ by SmugZombie", layout: "below" }, ""),
+                window.SP_REACT.createElement(Field, { label: "More Info: https://deckshare.zip", layout: "below" }, ""),
+                window.SP_REACT.createElement(Field, { label: "Version: " + version, layout: "below" }, ""),
+            ),
             
-          ))));
+          ),
+          window.SP_REACT.createElement(PanelSection, { title: "Stats" },                    
+            window.SP_REACT.createElement(PanelSectionRow, null,
+              window.SP_REACT.createElement(Field, { label: `Screenshots Taken: ${screenshotsTaken}`, layout: "below" }, ),
+              window.SP_REACT.createElement(Field, { label: `Screenshots Shared: ${screenshotsShared}`, layout: "below" }, ),
+            ),
+            
+          ),
+          
+          
+          )));
     };
     
     var index = definePlugin((serverApi) => {
