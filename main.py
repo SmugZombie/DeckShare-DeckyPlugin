@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 import os
 import sys
-import ssl
-
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), 'steampy'))
-
+import ssl
 import vdf
 import http.client
 import mimetypes
@@ -27,17 +25,20 @@ class Plugin:
   version = "0.0.4beta"
   discordWebhookURLBase = "https://discord.com/api/webhooks/"
 
+  # Validates the Webhook URL by sending a GET request to the URL and checking the status code of the response
   async def validateWebhookUrl(self, webhookUrl):
     try:
       log("Checking Webhook URL:" + webhookUrl)
       if(webhookUrl == "" or webhookUrl == False or webhookUrl == "https://discord.com/api/webhooks/"):
         log("No Valid Webhook URL Found")
         return False
+      
       # Separate the host and the path of the URL
       from urllib.parse import urlparse
       parsed_url = urlparse(webhookUrl)
       host = parsed_url.netloc
       path = parsed_url.path
+
       # Create an unverified SSL context
       context = ssl._create_unverified_context()
 
@@ -45,6 +46,8 @@ class Plugin:
       conn = http.client.HTTPSConnection(host, context=context)
       conn.request('GET', path, "", {})
       response = conn.getresponse()
+
+      # Check the status code of the response for success or failure
       if response.status == 200:
         log(f"Successfully validated Webhook URL")
         return True
@@ -54,13 +57,12 @@ class Plugin:
     except Exception as e:
       log(f"An error occurred: {e}")
       return False
-        
 
+  # Get the Webhook URL from the settings
   async def getWebhookUrl(self):
     try:
       self.discordWebhookURL = str(await self.getSetting(self, 'discordWebhook', ''))
       if(self.discordWebhookURL == ""):
-      
         self.discordWebhookURL = self.discordWebhookURLBase
       #log("Storage Discord Webhook: " + self.discordWebhookURL)
       return self.discordWebhookURL
@@ -68,13 +70,12 @@ class Plugin:
       log(f"An error occurred: {e}")
       return False
       
+  # Set the Webhook URL in the settings
   async def setWebhookUrl(self, webhookUrl):
     try:
-
       if(await self.validateWebhookUrl(self, webhookUrl) == False):
         log("Invalid Webhook URL")
         return "Invalid Webhook URL"
-
       self.discordWebhookURL = webhookUrl
       #log("Setting Discord Webhook: " + self.discordWebhookURL)
       await self.setSetting(self, 'discordWebhook', webhookUrl)
@@ -83,22 +84,26 @@ class Plugin:
       log(f"An error occurred: {e}")
       return False
 
+  # Get the Steam ID of the current logged in user
   def GetSteamId(self):
     d = vdf.parse(open("{0}config/loginusers.vdf".format(self.steamdir), encoding="utf-8"))
     users = d['users']
     for id64 in users:
-        if users[id64]["MostRecent"] == "1":
-            user = int(id64)
-            return user
+      if users[id64]["MostRecent"] == "1":
+        user = int(id64)
+        return user
   
+  # Retrieves a stored setting from the settings file
   async def getSetting(self, key, defaultVal):
     return self.settingsManager.getSetting(key, defaultVal)
 
+  # Stores a setting in the settings file
   async def setSetting(self, key, newVal):
     self.settingsManager.setSetting(key, newVal)
     log(f"Set setting {key} to {newVal}")
     pass
 
+  # Retrieves the home directory of the plugin
   async def getHomeDir(self):
     return self.pluginUser
 
@@ -136,7 +141,7 @@ class Plugin:
     log("Plugin unloaded")
     pass
 
-  # Normal methods: can be called from JavaScript using call_plugin_function("signature", argument)
+  # Get the latest screenshots from the Steam screenshots directory limited to the newest 5 that are not thumbnails
   async def getScreenshots(self):
     screenshots = {}
     user = self.GetSteamId(self)
@@ -151,7 +156,7 @@ class Plugin:
     # Convert the dictionary to a list of tuples and sort it based on the file name
     sorted_screenshots = sorted(screenshots.items(), key=lambda x: x[0], reverse=True)
 
-    # Get only the first 10 elements of the list
+    # Get only the first 5 elements of the list
     sorted_screenshots = sorted_screenshots[:5]
 
     # Convert the list of tuples back to a dictionary
@@ -159,34 +164,33 @@ class Plugin:
 
   async def uploadScreenshot(self, filepath):
     try:
-        if(self.discordWebhookURL == "" or self.discordWebhookURL == False):
-          log("No Valid Webhook URL Found")
-          return False
-        log("UploadScreenshots called")
-        newestScreenshot = filepath
-        log("Newest Screenshot" + newestScreenshot)
-        status = await upload_file(newestScreenshot, self.discordWebhookURL)
-        log(status)
-        return status
+      # Validate that we have a valid webhook, otherwise break
+      if(self.discordWebhookURL == "" or self.discordWebhookURL == False):
+        log("No Valid Webhook URL Found")
+        return False
+      status = await upload_file(filepath, self.discordWebhookURL)
+      log(status)
+      return status
     except Exception as e:
-        log(f"An error occurred: {e}")
+      log(f"An error occurred: {e}")
     return False
 
   async def uploadScreenshots(self):
     try:
-        if(self.discordWebhookURL == "" or self.discordWebhookURL == False):
-          log("No Valid Webhook URL Found")
-          return False
-        log("UploadScreenshots called")
-        newestScreenshot = get_newest_jpg(self)
-        log("Newest Screenshot" + newestScreenshot)
-        status = await upload_file(newestScreenshot, self.discordWebhookURL)
-        log(status)
-        return status
+      # Validate that we have a valid webhook, otherwise break
+      if(self.discordWebhookURL == "" or self.discordWebhookURL == False):
+        log("No Valid Webhook URL Found")
+        return False
+      newestScreenshot = get_newest_jpg(self)
+      log("Newest Screenshot" + newestScreenshot)
+      status = await upload_file(newestScreenshot, self.discordWebhookURL)
+      log(status)
+      return status
     except Exception as e:
-        log(f"An error occurred: {e}")
+      log(f"An error occurred: {e}")
     return False
 
+# Returns the newest created screenshot in the Steam screenshots directory
 def get_newest_jpg(self):
     try:
       user = self.GetSteamId(self)
@@ -195,8 +199,8 @@ def get_newest_jpg(self):
 
       # Check if the directory exists
       if not os.path.isdir(url):
-          log(f"Directory does not exist: {url}")
-          return None
+        log(f"Directory does not exist: {url}")
+        return None
 
       # Initialize the newest file and its creation time
       newest_file = None
@@ -204,23 +208,23 @@ def get_newest_jpg(self):
 
       # Traverse the directory tree
       try:
-          for root, dirs, files in os.walk(url):
-              for file in files:
-                  if file.endswith(".jpg"):
-                      file_path = os.path.join(root, file)
-                      file_time = os.path.getctime(file_path)
-                      if newest_file is None or file_time > newest_file_time:
-                          newest_file = file_path
-                          newest_file_time = file_time
+        for root, dirs, files in os.walk(url):
+          for file in files:
+            if file.endswith(".jpg"):
+              file_path = os.path.join(root, file)
+              file_time = os.path.getctime(file_path)
+              if newest_file is None or file_time > newest_file_time:
+                newest_file = file_path
+                newest_file_time = file_time
       except Exception as e:
           log(f"An error occurred while searching for .jpg files: {e}")
           return None
 
+      # Check if no .jpg files were found
       if newest_file is None:
-          log("No .jpg files found")
+        log("No .jpg files found")
 
       log(f"Newest .jpg file: {newest_file}")
-
       return newest_file
     except Exception as e:
       log(f"An error occurred: {e}")
@@ -231,14 +235,14 @@ async def upload_file(filename, webhook_url):
       log("UploadFile called" + filename)
       # Check if the file exists
       if not os.path.isfile(filename):
-          print(f"File {filename} does not exist")
-          return
+        print(f"File {filename} does not exist")
+        return
 
       # Prepare the file for sending
       with open(filename, 'rb') as f:
-          file_data = f.read()
-          file_type = mimetypes.guess_type(filename)[0]
-          file_name = os.path.basename(filename)
+        file_data = f.read()
+        file_type = mimetypes.guess_type(filename)[0]
+        file_name = os.path.basename(filename)
 
       # Prepare the POST data
       boundary = 'wL36Yn8afVp8Ag7AmP8qZ0SA4n1v9T'
@@ -264,19 +268,19 @@ async def upload_file(filename, webhook_url):
       # Send the POST request
       conn = http.client.HTTPSConnection(host, context=context)
       headers = {
-          'Content-Type': 'multipart/form-data; boundary=%s' % boundary,
-          'Content-Length': str(len(body))
+        'Content-Type': 'multipart/form-data; boundary=%s' % boundary,
+        'Content-Length': str(len(body))
       }
       conn.request('POST', path, body, headers)
       response = conn.getresponse()
 
       # Check the status code of the response for success or failure
       if response.status == 200:
-          print(f"Successfully uploaded {filename} to Discord")
-          return response.status
+        print(f"Successfully uploaded {filename} to Discord")
+        return response.status
       else:
-          print(f"Failed to upload {filename} to Discord")
-          return False
+        print(f"Failed to upload {filename} to Discord")
+        return False
     except Exception as e:
       log(f"An error occurred: {e}")
       return False
