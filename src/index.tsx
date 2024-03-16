@@ -175,9 +175,9 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
             <ToggleField label="Notifications" checked={notifications} onChange={(value) => toggleNotifications(value)} ></ToggleField>
             <TextField value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)}></TextField>
             <ToggleField label="Save Webhook Url" checked={false} onChange={() => saveWebhookUrl(webhookUrl)} ></ToggleField>
-            (isError) ? (
+            {(isError) ? (
               <PanelSectionRow>Error</PanelSectionRow>
-            ) : ("")
+            ) : ("")}
           </PanelSectionRow>
           {
             (screenshotsList.length == 0) ? (
