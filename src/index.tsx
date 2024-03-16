@@ -174,7 +174,10 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
             <ToggleField label="AutoShare" checked={autoUpload} onChange={(value) => toggleAutoUpload(value)} ></ToggleField>
             <ToggleField label="Notifications" checked={notifications} onChange={(value) => toggleNotifications(value)} ></ToggleField>
             <TextField value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)}></TextField>
-            <ToggleField label="Save Url" checked={false} onChange={() => saveWebhookUrl(webhookUrl)} ></ToggleField>
+            <ToggleField label="Save Webhook Url" checked={false} onChange={() => saveWebhookUrl(webhookUrl)} ></ToggleField>
+            (isError) ? (
+              <PanelSectionRow>Error</PanelSectionRow>
+            ) : ("")
           </PanelSectionRow>
           {
             (screenshotsList.length == 0) ? (
