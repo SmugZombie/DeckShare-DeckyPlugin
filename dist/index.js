@@ -298,9 +298,9 @@
        * Determines which action to run when the interactable is selected.
        * @param screenshot The screenshot associated with this screenshotLauncher.
        */
-      async function onAction(screenshot) {
+      async function onAction() {
           PyInterop.toast("DeckShare", "Manually sharing screenshot");
-          await PyInterop.uploadScreenshot(screenshot.path);
+          await PyInterop.uploadScreenshot(props.screenshot.path);
       }
       return (window.SP_REACT.createElement(React.Fragment, null,
           window.SP_REACT.createElement("style", null, `
@@ -317,14 +317,14 @@
           window.SP_REACT.createElement("div", { className: "custom-buttons" },
               window.SP_REACT.createElement(deckyFrontendLib.Field, { label: window.SP_REACT.createElement(ScreenshotLabel, { screenshot: props.screenshot, isRunning: isRunning }) },
                   window.SP_REACT.createElement(deckyFrontendLib.Focusable, { style: { display: "flex", width: "100%" } },
-                      window.SP_REACT.createElement(deckyFrontendLib.DialogButton, { onClick: () => onAction(props.screenshot), style: {
+                      window.SP_REACT.createElement(deckyFrontendLib.DialogButton, { onClick: () => onAction(), style: {
                               minWidth: "30px",
                               maxWidth: "60px",
                               display: "flex",
                               justifyContent: "center",
                               alignItems: "center"
                           } },
-                          window.SP_REACT.createElement("img", { style: { maxWidth: 60, maxHeight: 32 }, src: "/home/deck/.local/share/Steam/userdata/28357484/760/remote/7/screenshots/20240315230415_1.jpg" })))))));
+                          window.SP_REACT.createElement("img", { style: { maxWidth: 60, maxHeight: 32 }, src: props.screenshot.path })))))));
   };
 
   class ScreenshotsState {

@@ -64,9 +64,9 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
    * Determines which action to run when the interactable is selected.
    * @param screenshot The screenshot associated with this screenshotLauncher.
    */
-  async function onAction(screenshot:Screenshot): Promise<void> {
+  async function onAction(): Promise<void> {
     PyInterop.toast("DeckShare", "Manually sharing screenshot")
-    await PyInterop.uploadScreenshot(screenshot.path)
+    await PyInterop.uploadScreenshot(props.screenshot.path)
 
   }
 
@@ -88,7 +88,7 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
       <div className="custom-buttons">
         <Field label={<ScreenshotLabel screenshot={props.screenshot} isRunning={isRunning} />}>
           <Focusable style={{ display: "flex", width: "100%" }}>
-            <DialogButton onClick={() => onAction(props.screenshot)} style={{
+            <DialogButton onClick={() => onAction()} style={{
               minWidth: "30px",
               maxWidth: "60px",
               display: "flex",
@@ -97,7 +97,7 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
             }}>
               <img
                 style={{ maxWidth: 60, maxHeight: 32 }}
-                src={ "/home/deck/.local/share/Steam/userdata/28357484/760/remote/7/screenshots/20240315230415_1.jpg" }
+                src={ props.screenshot.path }
               />
             </DialogButton>
           </Focusable>
