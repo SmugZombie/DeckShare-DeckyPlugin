@@ -154,6 +154,9 @@
       static async getSetting(key, defaultVal) {
           return (await this.serverAPI.callPluginMethod("getSetting", { key: key, defaultVal: defaultVal })).result;
       }
+      static async getImage(key) {
+          return (await this.serverAPI.callPluginMethod("getImage", { filepath: key })).result;
+      }
       /**
        * Sets the value of a plugin's setting.
        * @param key The key of the setting to set.
