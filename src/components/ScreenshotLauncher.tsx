@@ -67,6 +67,7 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
   async function onAction(screenshot:Screenshot): Promise<void> {
     PyInterop.toast("DeckShare", "Manually sharing screenshot")
     await PyInterop.uploadScreenshot(screenshot.path)
+
   }
 
   return (
