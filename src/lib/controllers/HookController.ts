@@ -68,6 +68,7 @@ export class HookController {
     this.liten();
 
     for (const screenshot of Object.values(screenshots)) {
+      PyInterop.log(screenshot)
       this.updateHooks(screenshot);
     }
   }
