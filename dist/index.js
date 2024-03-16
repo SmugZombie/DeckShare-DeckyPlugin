@@ -319,7 +319,6 @@
           window.SP_REACT.createElement("div", { className: "custom-buttons" },
               window.SP_REACT.createElement(deckyFrontendLib.Field, { label: window.SP_REACT.createElement(ScreenshotLabel, { screenshot: props.screenshot, isRunning: isRunning }) },
                   window.SP_REACT.createElement(deckyFrontendLib.Focusable, { style: { display: "flex", width: "100%" } },
-                      window.SP_REACT.createElement("img", { style: { maxWidth: 32, maxHeight: 32 }, src: props.screenshot.path }),
                       window.SP_REACT.createElement(deckyFrontendLib.DialogButton, { onClick: () => onAction(props.screenshot), style: {
                               minWidth: "30px",
                               maxWidth: "60px",
@@ -327,6 +326,7 @@
                               justifyContent: "center",
                               alignItems: "center"
                           } },
+                          window.SP_REACT.createElement("img", { style: { maxWidth: 32, maxHeight: 32 }, src: props.screenshot.path }),
                           window.SP_REACT.createElement(IoRocketSharp, { color: "#36ff04" })))))));
   };
 
