@@ -84,39 +84,6 @@
   }
 
   /**
-   * Contains all of the nessesary information on each screenshot.
-   */
-  class Screenshot {
-      /**
-       * Creates a new Screenshot.
-       * @param id The id of the screenshot.
-       * @param name The name/lable of the screenshot.
-       * @param cmd The command the screenshot runs.
-       * @param position The position of the screenshot in the list of screenshots.
-       * @param isApp Whether the screenshot is an app or not.
-       * @param passFlags Whether the screenshot takes flags or not.
-       * @param hooks The list of hooks for this screenshot.
-       */
-      constructor(id, name, cmd, position, isApp, passFlags, hooks) {
-          this.id = id;
-          this.name = name;
-          this.cmd = cmd;
-          this.position = position;
-          this.isApp = isApp;
-          this.passFlags = passFlags;
-          this.hooks = hooks;
-      }
-      /**
-       * Creates a new Screenshot from the provided json data.
-       * @param json The json data to use for the screenshot.
-       * @returns A new Screenshot.
-       */
-      static fromJSON(json) {
-          return new Screenshot(json.id, json.name, json.cmd, json.position, json.isApp, json.passFlags, json.hooks);
-      }
-  }
-
-  /**
    * Class for frontend - backend communication.
    */
   class PyInterop {
@@ -351,8 +318,8 @@
       `),
           window.SP_REACT.createElement("div", { className: "custom-buttons" },
               window.SP_REACT.createElement(deckyFrontendLib.Field, { label: window.SP_REACT.createElement(ScreenshotLabel, { screenshot: props.screenshot, isRunning: isRunning }) },
-                  window.SP_REACT.createElement("img", { style: { maxWidth: 32, maxHeight: 32 }, src: Screenshot.path }),
                   window.SP_REACT.createElement(deckyFrontendLib.Focusable, { style: { display: "flex", width: "100%" } },
+                      window.SP_REACT.createElement("img", { style: { maxWidth: 32, maxHeight: 32 }, src: props.screenshot.path }),
                       window.SP_REACT.createElement(deckyFrontendLib.DialogButton, { onClick: () => onAction(props.screenshot), style: {
                               minWidth: "30px",
                               maxWidth: "60px",

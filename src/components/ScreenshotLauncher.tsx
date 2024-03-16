@@ -87,11 +87,11 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
       </style>
       <div className="custom-buttons">
         <Field label={<ScreenshotLabel screenshot={props.screenshot} isRunning={isRunning} />}>
-          <img
-              style={{ maxWidth: 32, maxHeight: 32 }}
-              src={ Screenshot.path }
-          />
           <Focusable style={{ display: "flex", width: "100%" }}>
+            <img
+                style={{ maxWidth: 32, maxHeight: 32 }}
+                src={ props.screenshot.path }
+            />
             <DialogButton onClick={() => onAction(props.screenshot)} style={{
               minWidth: "30px",
               maxWidth: "60px",
