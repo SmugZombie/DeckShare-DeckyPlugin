@@ -151,4 +151,45 @@ export class PyInterop {
     const successful = await this.serverAPI.callPluginMethod<{ screenshotId: string }, void>("killNonAppScreenshot", { screenshotId: screenshotId });
     return successful;
   }
+
+  /**
+   * Sets the value of a plugin's setting.
+   * @param key The key of the setting to set.
+   * @param newVal The new value for the setting.
+   * @returns A void promise resolving once the setting is set.
+   */
+  static async getWebhookUrl<T>(): Promise<ServerResponse<void>> {
+    return await this.serverAPI.callPluginMethod<{ key: string, newVal : T}, void>("getWebhookUrl", { });
+  }
+
+
+  /**
+   * Sets the value of a plugin's setting.
+   * @param key The key of the setting to set.
+   * @param newVal The new value for the setting.
+   * @returns A void promise resolving once the setting is set.
+   */
+  static async setWebhookUrl<T>(key: string): Promise<ServerResponse<void>> {
+    return await this.serverAPI.callPluginMethod<{ key: string}, void>("setWebhookUrl", { webhookUrl: key });
+  }
+
+  /**
+   * Sets the value of a plugin's setting.
+   * @param key The key of the setting to set.
+   * @param newVal The new value for the setting.
+   * @returns A void promise resolving once the setting is set.
+   */
+  static async uploadScreenshot<T>(key: string): Promise<ServerResponse<void>> {
+    return await this.serverAPI.callPluginMethod<{ key: string, newVal : T}, void>("uploadScreenshot", { filepath: key });
+  }
+
+  /**
+   * Sets the value of a plugin's setting.
+   * @param key The key of the setting to set.
+   * @param newVal The new value for the setting.
+   * @returns A void promise resolving once the setting is set.
+   */
+  static async uploadScreenshots<T>(): Promise<ServerResponse<void>> {
+    return await this.serverAPI.callPluginMethod<{ key: string, newVal : T}, void>("uploadScreenshots", { });
+  }
 }

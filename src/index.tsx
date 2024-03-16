@@ -10,8 +10,9 @@ import {
   ServerResponse,
   SidebarNavigation,
   staticClasses,
+  ToggleField,
 } from "decky-frontend-lib";
-import { VFC, Fragment, useRef } from "react";
+import { VFC, Fragment, useRef, useState } from "react";
 import { IoApps, IoSettingsSharp } from "react-icons/io5";
 import { HiViewGridAdd } from "react-icons/hi";
 import { FaEdit } from "react-icons/fa";
@@ -36,13 +37,104 @@ declare global {
 
 const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
   const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
+  const [ webhookUrl, setWebhookUrl ] = useState("");
+  const [ isError, setIsError ] = useState(false);
+  const [ errorMessage, setErrorMessage ] = useState("");
+  const [ isLoadingUrl, setIsLoadingUrl ] = useState(false);
+  const [ isSaving, setIsSaving ] = useState(false);
+  const [ isSaved, setIsSaved ] = useState(false);
+  const [ version, setVersion ] = useState("0.0.0");
+  const [ autoUpload, setAutoUpload ] = useState(false);
+  const [ notifications, setNotifications ] = useState(false);
+  const [ screenshotsTaken, setScreenshotsTaken ] = useState(0);
+  const [ screenshotsShared, setScreenshotsShared ] = useState(0);
   const tries = useRef(0);
 
-  async function reload(): Promise<void> {
-    await PyInterop.getScreenshots().then((res) => {
-      setScreenshots(res.result as ScreenshotsDictionary);
+  async function saveWebhookUrl(webhookUrl:string) {
+    setIsLoadingUrl(true);
+    setIsSaving(true);
+    setIsSaved(false);
+    await PyInterop.setWebhookUrl(webhookUrl).then((res) => {
+      if (res.result?.toLowerCase().includes("invalid")) {
+        setIsError(true);
+        setErrorMessage(res.result);
+      }else{
+        if(res.result){
+          setIsError(false);
+          setErrorMessage("");
+          setWebhookUrl(res.result);
+          setIsSaving(false);
+          setIsSaved(true);
+          setTimeout(() => { setIsSaved(false); }, 3000);
+        }
+      }
+      setIsLoadingUrl(false);
     });
   }
+
+  async function reload(): Promise<void> {
+    try{
+      await PyInterop.getScreenshots().then((res) => {
+        setScreenshots(res.result as ScreenshotsDictionary);
+      });
+    }catch(e){  
+      PyInterop.log("Error in reload: " + e);
+    }
+  }
+
+  async function loadWebhookUrl(force=true) {
+    if (((webhookUrl == "" || webhookUrl == null || webhookUrl == "False") && isLoadingUrl == false) || force == true) {
+      setIsLoadingUrl(true);
+      await PyInterop.getWebhookUrl().then((res) => {
+
+        if (res.result?.toLowerCase().includes("invalid")) {
+          setIsError(true);
+          setErrorMessage(res.result);
+        }else{
+          if(res.result){
+            setIsError(false);
+            setWebhookUrl(res.result);
+            setErrorMessage("");
+          }
+        }
+        setIsLoadingUrl(false);
+      });
+    }
+  }
+
+  async function toggleAutoUpload(value:boolean){
+    await PyInterop.setSetting("autoupload", value);
+    setAutoUpload(value);
+  }
+
+  async function toggleNotifications(value:boolean){
+    await PyInterop.setSetting("notifications", value);
+    setNotifications(value);
+  }
+
+  async function loadSettings() {
+    try{
+      const version = await PyInterop.getSetting("version", "0.0.0");
+      setVersion(version);
+      let autoupload = await PyInterop.getSetting("autoupload", false);
+      setAutoUpload(autoupload);
+      let notifications = await PyInterop.getSetting("notifications", false);
+      setNotifications(notifications);
+      const screenshotsTaken = await PyInterop.getSetting("screenshotsTaken", 0);
+      setScreenshotsTaken(screenshotsTaken);
+      const screenshotsShared = await PyInterop.getSetting("screenshotsShared", 0);
+      setScreenshotsShared(screenshotsShared);
+      setTimeout(async () => { await loadSettings(); reload(); }, 5000);
+    }catch(e){
+      PyInterop.log("Error in loadSettings: " + e);
+    }
+  }
+
+  if(version == "0.0.0"){
+    loadSettings();
+  }
+
+  loadWebhookUrl(false);
 
   if (Object.values(screenshots as ScreenshotsDictionary).length === 0 && tries.current < 10) {
     reload();
@@ -78,9 +170,9 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
       <div className="deckshare-scope">
         <PanelSection>
           <PanelSectionRow>
-            <ButtonItem layout="below" onClick={() => { Navigation.CloseSideMenus(); Navigation.Navigate("/deckshare-config"); }} >
-              Plugin Config
-            </ButtonItem>
+            <ToggleField checked={autoUpload} onChange={(value) => toggleAutoUpload(value)} >
+              AutoShare
+            </ToggleField>
           </PanelSectionRow>
           {
             (screenshotsList.length == 0) ? (

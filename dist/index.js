@@ -214,6 +214,42 @@
           const successful = await this.serverAPI.callPluginMethod("killNonAppScreenshot", { screenshotId: screenshotId });
           return successful;
       }
+      /**
+       * Sets the value of a plugin's setting.
+       * @param key The key of the setting to set.
+       * @param newVal The new value for the setting.
+       * @returns A void promise resolving once the setting is set.
+       */
+      static async getWebhookUrl() {
+          return await this.serverAPI.callPluginMethod("getWebhookUrl", {});
+      }
+      /**
+       * Sets the value of a plugin's setting.
+       * @param key The key of the setting to set.
+       * @param newVal The new value for the setting.
+       * @returns A void promise resolving once the setting is set.
+       */
+      static async setWebhookUrl(key) {
+          return await this.serverAPI.callPluginMethod("setWebhookUrl", { webhookUrl: key });
+      }
+      /**
+       * Sets the value of a plugin's setting.
+       * @param key The key of the setting to set.
+       * @param newVal The new value for the setting.
+       * @returns A void promise resolving once the setting is set.
+       */
+      static async uploadScreenshot(key) {
+          return await this.serverAPI.callPluginMethod("uploadScreenshot", { filepath: key });
+      }
+      /**
+       * Sets the value of a plugin's setting.
+       * @param key The key of the setting to set.
+       * @param newVal The new value for the setting.
+       * @returns A void promise resolving once the setting is set.
+       */
+      static async uploadScreenshots() {
+          return await this.serverAPI.callPluginMethod("uploadScreenshots", {});
+      }
   }
 
   // THIS FILE IS AUTO GENERATED
@@ -2005,12 +2041,73 @@
 
   const Content = ({}) => {
       const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
+      const [webhookUrl, setWebhookUrl] = React.useState("");
+      const [isError, setIsError] = React.useState(false);
+      const [errorMessage, setErrorMessage] = React.useState("");
+      const [isLoadingUrl, setIsLoadingUrl] = React.useState(false);
+      React.useState(false);
+      React.useState(false);
+      const [version, setVersion] = React.useState("0.0.0");
+      const [autoUpload, setAutoUpload] = React.useState(false);
+      const [notifications, setNotifications] = React.useState(false);
+      const [screenshotsTaken, setScreenshotsTaken] = React.useState(0);
+      const [screenshotsShared, setScreenshotsShared] = React.useState(0);
       const tries = React.useRef(0);
       async function reload() {
-          await PyInterop.getScreenshots().then((res) => {
-              setScreenshots(res.result);
-          });
+          try {
+              await PyInterop.getScreenshots().then((res) => {
+                  setScreenshots(res.result);
+              });
+          }
+          catch (e) {
+              PyInterop.log("Error in reload: " + e);
+          }
       }
+      async function loadWebhookUrl(force = true) {
+          if (((webhookUrl == "" || webhookUrl == null || webhookUrl == "False") && isLoadingUrl == false) || force == true) {
+              setIsLoadingUrl(true);
+              await PyInterop.getWebhookUrl().then((res) => {
+                  if (res.result?.toLowerCase().includes("invalid")) {
+                      setIsError(true);
+                      setErrorMessage(res.result);
+                  }
+                  else {
+                      if (res.result) {
+                          setIsError(false);
+                          setWebhookUrl(res.result);
+                          setErrorMessage("");
+                      }
+                  }
+                  setIsLoadingUrl(false);
+              });
+          }
+      }
+      async function toggleAutoUpload(value) {
+          await PyInterop.setSetting("autoupload", value);
+          setAutoUpload(value);
+      }
+      async function loadSettings() {
+          try {
+              const version = await PyInterop.getSetting("version", "0.0.0");
+              setVersion(version);
+              let autoupload = await PyInterop.getSetting("autoupload", false);
+              setAutoUpload(autoupload);
+              let notifications = await PyInterop.getSetting("notifications", false);
+              setNotifications(notifications);
+              const screenshotsTaken = await PyInterop.getSetting("screenshotsTaken", 0);
+              setScreenshotsTaken(screenshotsTaken);
+              const screenshotsShared = await PyInterop.getSetting("screenshotsShared", 0);
+              setScreenshotsShared(screenshotsShared);
+              setTimeout(async () => { await loadSettings(); reload(); }, 5000);
+          }
+          catch (e) {
+              PyInterop.log("Error in loadSettings: " + e);
+          }
+      }
+      if (version == "0.0.0") {
+          loadSettings();
+      }
+      loadWebhookUrl(false);
       if (Object.values(screenshots).length === 0 && tries.current < 10) {
           reload();
           tries.current++;
@@ -2043,7 +2140,7 @@
           window.SP_REACT.createElement("div", { className: "deckshare-scope" },
               window.SP_REACT.createElement(deckyFrontendLib.PanelSection, null,
                   window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
-                      window.SP_REACT.createElement(deckyFrontendLib.ButtonItem, { layout: "below", onClick: () => { deckyFrontendLib.Navigation.CloseSideMenus(); deckyFrontendLib.Navigation.Navigate("/deckshare-config"); } }, "Plugin Config")),
+                      window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { checked: autoUpload, onChange: (value) => toggleAutoUpload(value) }, "AutoShare")),
                   (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
                       screenshotsList.map((itm) => (window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))),
                       window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
