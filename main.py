@@ -7,6 +7,7 @@ import ssl
 import vdf
 import http.client
 import mimetypes
+import base64
 from py_backend.instanceManager import InstanceManager
 from py_backend.jsInterop import JsInteropManager
 from settings import SettingsManager
