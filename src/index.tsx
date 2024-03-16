@@ -221,69 +221,11 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
   );
 };
 
-const ShortcutsManagerRouter: VFC<{ guides: GuidePages }> = ({ guides }) => {
-  const guidePages = {}
-  Object.entries(guides).map(([ guideName, guide ]) => {
-    guidePages[guideName] = {
-      title: guideName,
-      content: <GuidePage content={guide} />,
-      route: `/bash-shortcuts-config/guides-${guideName.toLowerCase().replace(/ /g, "-")}`,
-      icon: <MdNumbers />,
-      hideTitle: true
-    }
-  });
-
-  return (
-    <SidebarNavigation
-      title="Plugin Config"
-      showTitle
-      pages={[
-        {
-          title: "Add Shortcut",
-          content: <AddShortcut />,
-          route: "/bash-shortcuts-config/add",
-          icon: <HiViewGridAdd />
-        },
-        {
-          title: "Manage Shortcuts",
-          content: <ManageShortcuts />,
-          route: "/bash-shortcuts-config/manage",
-          icon: <FaEdit />
-        },
-        {
-          title: "Settings",
-          content: <Settings />,
-          route: "/bash-shortcuts-config/settings",
-          icon: <IoSettingsSharp />
-        },
-        "separator",
-        guidePages["Overview"],
-        guidePages["Managing Shortcuts"],
-        guidePages["Custom Scripts"],
-        guidePages["Using Hooks"]
-      ]}
-    />
-  );
-};
-
 export default definePlugin((serverApi: ServerAPI) => {
   PyInterop.setServer(serverApi);
-
   const state = new ScreenshotsState();
   PluginController.setup(serverApi, state);
-
   const loginHook = PluginController.initOnLogin();
-
-  PyInterop.getGuides().then((res: ServerResponse<GuidePages>) => {
-    const guides = res.result as GuidePages;
-    console.log("Guides:", guides);
-
-    serverApi.routerHook.addRoute("/bash-shortcuts-config", () => (
-      <ShortcutsContextProvider shortcutsStateClass={state}>
-        <ShortcutsManagerRouter guides={guides} />
-      </ShortcutsContextProvider>
-    ));
-  });
 
   return {
     title: <div className={staticClasses.Title}>DeckShare</div>,
