@@ -187,7 +187,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
             ) : ("")}
           </PanelSectionRow>
         </PanelSection>
-        <PanelSection title="Screenshots">
+        <PanelSection title="Recent Screenshots">
           {
             (screenshotsList.length == 0) ? (
               <div style={{ textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" }}>No screenshots found</div>
