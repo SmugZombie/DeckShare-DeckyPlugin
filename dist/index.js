@@ -302,12 +302,17 @@
       // Function to load the image and convert it to Base64
       React.useEffect(() => {
           const fetchImageAndConvertToBase64 = async () => {
-              await PyInterop.getImage(props.screenshot.path).then(async (res) => {
-                  if (res.result) {
-                      await PyInterop.log("Base64:" + res.result);
-                      setImgBase64(res.result);
-                  }
-              });
+              try {
+                  await PyInterop.getImage(props.screenshot.path).then(async (res) => {
+                      if (res.result) {
+                          await PyInterop.log("Base64:" + res.result);
+                          setImgBase64(res.result);
+                      }
+                  });
+              }
+              catch (e) {
+                  await PyInterop.log("ERROR:" + e);
+              }
           };
           if (props.screenshot.path) {
               fetchImageAndConvertToBase64();
