@@ -2061,6 +2061,7 @@
               if (res.result?.toLowerCase().includes("invalid")) {
                   setIsError(true);
                   setErrorMessage(res.result);
+                  setTimeout(() => { setIsError(false); setErrorMessage(""); }, 3000);
               }
               else {
                   if (res.result) {
@@ -2170,7 +2171,9 @@
                       window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { label: "Notifications", checked: notifications, onChange: (value) => toggleNotifications(value) }),
                       window.SP_REACT.createElement(deckyFrontendLib.TextField, { value: webhookUrl, onChange: (e) => setWebhookUrl(e.target.value) }),
                       window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { label: "Save Webhook Url", checked: false, onChange: () => saveWebhookUrl(webhookUrl) }),
-                      (isError) ? (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Error")) : ("")),
+                      (isError) ? (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
+                          "Error: ",
+                          errorMessage)) : ("")),
                   (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
                       screenshotsList.map((itm) => (window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))),
                       window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,

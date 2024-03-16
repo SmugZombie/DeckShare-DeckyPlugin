@@ -59,6 +59,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
       if (res.result?.toLowerCase().includes("invalid")) {
         setIsError(true);
         setErrorMessage(res.result);
+        setTimeout(() => { setIsError(false); setErrorMessage(""); }, 3000);
       }else{
         if(res.result){
           setIsError(false);
@@ -176,7 +177,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
             <TextField value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)}></TextField>
             <ToggleField label="Save Webhook Url" checked={false} onChange={() => saveWebhookUrl(webhookUrl)} ></ToggleField>
             {(isError) ? (
-              <PanelSectionRow>Error</PanelSectionRow>
+              <PanelSectionRow>Error: {errorMessage}</PanelSectionRow>
             ) : ("")}
           </PanelSectionRow>
           {
