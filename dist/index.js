@@ -1618,7 +1618,7 @@
       init(screenshots) {
           this.liten();
           for (const screenshot of Object.values(screenshots)) {
-              PyInterop.log(screenshot);
+              PyInterop.log(JSON.stringify(screenshot));
               this.updateHooks(screenshot);
           }
       }
