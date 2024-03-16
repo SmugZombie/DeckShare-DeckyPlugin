@@ -297,27 +297,6 @@
    */
   const ScreenshotLauncher = (props) => {
       const [isRunning] = React.useState(false);
-      React.useState(null); // State to store Base64 data
-      const [imgBase64, setImgBase64] = React.useState("");
-      // Function to load the image and convert it to Base64
-      React.useEffect(() => {
-          const fetchImageAndConvertToBase64 = async () => {
-              try {
-                  await PyInterop.getImage(props.screenshot.path).then(async (res) => {
-                      if (res.result) {
-                          await PyInterop.log("Base64:" + res.result);
-                          setImgBase64(res.result);
-                      }
-                  });
-              }
-              catch (e) {
-                  await PyInterop.log("ERROR:" + e);
-              }
-          };
-          if (props.screenshot.path) {
-              fetchImageAndConvertToBase64();
-          }
-      }, [props.screenshot.path]); // Run only when screenshot path changes
       /**
        * Determines which action to run when the interactable is selected.
        * @param screenshot The screenshot associated with this screenshotLauncher.
@@ -347,7 +326,7 @@
                               display: "flex",
                               justifyContent: "center",
                               alignItems: "center"
-                          } }, imgBase64 && window.SP_REACT.createElement("img", { style: { maxWidth: 60, maxHeight: 32 }, src: `data:image/png;base64,${imgBase64}`, alt: "Screenshot" })))))));
+                          } }, props.screenshot.base64 && window.SP_REACT.createElement("img", { style: { maxWidth: 60, maxHeight: 32 }, src: `data:image/png;base64,${props.screenshot.base64}`, alt: "Screenshot" })))))));
   };
 
   class ScreenshotsState {

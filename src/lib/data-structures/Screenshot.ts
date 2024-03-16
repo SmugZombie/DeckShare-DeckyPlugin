@@ -7,6 +7,7 @@ export class Screenshot {
   id: string;
   name: string;
   path: string;
+  base64: string;
 
   /**
    * Creates a new Screenshot.
@@ -18,10 +19,11 @@ export class Screenshot {
    * @param passFlags Whether the screenshot takes flags or not.
    * @param hooks The list of hooks for this screenshot.
    */
-  constructor(id: string, name: string, path: string ) {
+  constructor(id: string, name: string, path: string, base64: string ) {
     this.id = id;
     this.name = name;
     this.path = path;
+    this.base64 = base64;
   }
 
   /**
@@ -30,6 +32,6 @@ export class Screenshot {
    * @returns A new Screenshot.
    */
   static fromJSON(json: any): Screenshot {
-    return new Screenshot(json.id, json.name, json.path);
+    return new Screenshot(json.id, json.name, json.path, json.base64);
   }
 }
