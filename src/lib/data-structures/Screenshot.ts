@@ -6,11 +6,7 @@ import { Hook } from "../controllers/HookController";
 export class Screenshot {
   id: string;
   name: string;
-  cmd: string;
-  position: number;
-  isApp: boolean;
-  passFlags: boolean;
-  hooks: Hook[];
+  path: string;
 
   /**
    * Creates a new Screenshot.
@@ -22,14 +18,10 @@ export class Screenshot {
    * @param passFlags Whether the screenshot takes flags or not.
    * @param hooks The list of hooks for this screenshot.
    */
-  constructor(id: string, name: string, cmd: string, position: number, isApp: boolean, passFlags: boolean, hooks: Hook[]) {
+  constructor(id: string, name: string, path: string ) {
     this.id = id;
     this.name = name;
-    this.cmd = cmd;
-    this.position = position;
-    this.isApp = isApp;
-    this.passFlags = passFlags;
-    this.hooks = hooks;
+    this.path = path;
   }
 
   /**
