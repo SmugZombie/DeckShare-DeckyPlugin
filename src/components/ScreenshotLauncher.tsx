@@ -70,6 +70,8 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
 
   }
 
+  PyInterop.log(JSON.stringify(props))
+
   return (
     <>
       <style>

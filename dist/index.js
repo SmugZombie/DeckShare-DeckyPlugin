@@ -302,6 +302,7 @@
           PyInterop.toast("DeckShare", "Manually sharing screenshot");
           await PyInterop.uploadScreenshot(props.screenshot.path);
       }
+      PyInterop.log(JSON.stringify(props));
       return (window.SP_REACT.createElement(React.Fragment, null,
           window.SP_REACT.createElement("style", null, `
           .custom-buttons {
