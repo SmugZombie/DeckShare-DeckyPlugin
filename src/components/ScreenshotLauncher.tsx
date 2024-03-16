@@ -96,10 +96,9 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
               alignItems: "center"
             }}>
               <img
-                style={{ maxWidth: 32, maxHeight: 32 }}
+                style={{ maxWidth: 60, maxHeight: 32 }}
                 src={ props.screenshot.path }
               />
-              <IoRocketSharp color="#36ff04" />
             </DialogButton>
           </Focusable>
         </Field>
