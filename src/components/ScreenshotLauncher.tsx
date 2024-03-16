@@ -60,7 +60,6 @@ const ScreenshotLabel: VFC<{ screenshot: Screenshot, isRunning: boolean}> = (pro
  */
 export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: ScreenshotLauncherProps) => {
   const [isRunning] = useState(false);
-
   /**
    * Determines which action to run when the interactable is selected.
    * @param screenshot The screenshot associated with this screenshotLauncher.
@@ -68,7 +67,6 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
   async function onAction(): Promise<void> {
     PyInterop.toast("DeckShare", "Manually sharing screenshot")
     await PyInterop.uploadScreenshot(props.screenshot.path)
-
   }
 
   return (
