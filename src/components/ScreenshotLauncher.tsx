@@ -97,7 +97,7 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
             }}>
               <img
                 style={{ maxWidth: 60, maxHeight: 32 }}
-                src={ props.screenshot.path }
+                src={ props.screenshot.screenshot.path }
               />
             </DialogButton>
           </Focusable>

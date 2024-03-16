@@ -324,7 +324,7 @@
                               justifyContent: "center",
                               alignItems: "center"
                           } },
-                          window.SP_REACT.createElement("img", { style: { maxWidth: 60, maxHeight: 32 }, src: props.screenshot.path })))))));
+                          window.SP_REACT.createElement("img", { style: { maxWidth: 60, maxHeight: 32 }, src: props.screenshot.screenshot.path })))))));
   };
 
   class ScreenshotsState {
@@ -1617,8 +1617,9 @@
        */
       init(screenshots) {
           this.liten();
+          PyInterop.log(JSON.stringify(screenshots));
           for (const screenshot of Object.values(screenshots)) {
-              PyInterop.log(JSON.stringify(screenshot));
+              //PyInterop.log(JSON.stringify(screenshot))
               this.updateHooks(screenshot);
           }
       }
@@ -1629,22 +1630,6 @@
        */
       getScreenshotById(screenshotId) {
           return this.state.getPublicState().screenshots[screenshotId];
-      }
-      /**
-       * Sets wether a screenshot is running or not.
-       * @param screenshotId The id of the screenshot to set.
-       * @param value The new value.
-       */
-      setIsRunning(screenshotId, value) {
-          this.state.setIsRunning(screenshotId, value);
-      }
-      /**
-       * Checks if a screenshot is running.
-       * @param shorcutId The id of the screenshot to check for.
-       * @returns True if the screenshot is running.
-       */
-      checkIfRunning(shorcutId) {
-          return Object.keys(this.instancesController.instances).includes(shorcutId);
       }
       /**
        * Updates the hooks for a screenshot.
