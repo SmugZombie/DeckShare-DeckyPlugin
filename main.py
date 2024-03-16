@@ -190,6 +190,18 @@ class Plugin:
       log(f"An error occurred: {e}")
     return False
 
+  def _getGuides(self):
+    for guideFileName in os.listdir(self.guidesDirPath):
+      with open(os.path.join(self.guidesDirPath, guideFileName), 'r') as guideFile:
+        guideName = guideFileName.replace("_", " ").replace(".md", "")
+        self.guides[guideName] = "".join(guideFile.readlines())
+
+    pass
+
+  async def getGuides(self):
+    self._getGuides(self)
+    return self.guides
+
 # Returns the newest created screenshot in the Steam screenshots directory
 def get_newest_jpg(self):
     try:
