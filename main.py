@@ -151,7 +151,7 @@ class Plugin:
       if "thumbnails" not in root:
         for file in files:
           if file.endswith(".jpg"):
-            screenshots[file] = {'path': os.path.join(root, file), 'name': file, 'id': file}
+            screenshots[file] = {'path': os.path.join(root, file), 'name': file, 'id': file, 'base64': image_to_base64(os.path.join(root, file))}
 
     # Convert the dictionary to a list of tuples and sort it based on the file name
     sorted_screenshots = sorted(screenshots.items(), key=lambda x: x[0], reverse=True)
@@ -201,6 +201,13 @@ class Plugin:
   async def getGuides(self):
     self._getGuides(self)
     return self.guides
+
+  async def getImage(self, filepath):
+    try:
+      return await image_to_base64(filepath)
+    except Exception as e:
+      log(f"An error occurred [getImage]: {e}")
+    return False
 
 # Returns the newest created screenshot in the Steam screenshots directory
 def get_newest_jpg(self):
@@ -296,3 +303,15 @@ async def upload_file(filename, webhook_url):
     except Exception as e:
       log(f"An error occurred: {e}")
       return False
+
+def image_to_base64(image_path):
+  try:
+    with open(image_path, "rb") as image_file:
+      # Read image file
+      image_data = image_file.read()
+      # Encode image data as base64
+      base64_encoded = base64.b64encode(image_data).decode('utf-8')
+      return base64_encoded
+  except Exception as e:
+    print(f"Error: {e}")
+    return None
