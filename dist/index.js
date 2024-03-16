@@ -79,8 +79,6 @@
   // THIS FILE IS AUTO GENERATED
   function IoApps (props) {
     return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M104 160a56 56 0 1156-56 56.06 56.06 0 01-56 56zm152 0a56 56 0 1156-56 56.06 56.06 0 01-56 56zm152 0a56 56 0 1156-56 56.06 56.06 0 01-56 56zM104 312a56 56 0 1156-56 56.06 56.06 0 01-56 56zm152 0a56 56 0 1156-56 56.06 56.06 0 01-56 56zm152 0a56 56 0 1156-56 56.06 56.06 0 01-56 56zM104 464a56 56 0 1156-56 56.06 56.06 0 01-56 56zm152 0a56 56 0 1156-56 56.06 56.06 0 01-56 56zm152 0a56 56 0 1156-56 56.06 56.06 0 01-56 56z"}}]})(props);
-  }function IoRocketSharp (props) {
-    return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M477.64 38.26a4.75 4.75 0 00-3.55-3.66c-58.57-14.32-193.9 36.71-267.22 110a317 317 0 00-35.63 42.1c-22.61-2-45.22-.33-64.49 8.07C52.38 218.7 36.55 281.14 32.14 308a9.64 9.64 0 0010.55 11.2l87.31-9.63a194.1 194.1 0 001.19 19.7 19.53 19.53 0 005.7 12L170.7 375a19.59 19.59 0 0012 5.7 193.53 193.53 0 0019.59 1.19l-9.58 87.2a9.65 9.65 0 0011.2 10.55c26.81-4.3 89.36-20.13 113.15-74.5 8.4-19.27 10.12-41.77 8.18-64.27a317.66 317.66 0 0042.21-35.64C441 232.05 491.74 99.74 477.64 38.26zM294.07 217.93a48 48 0 1167.86 0 47.95 47.95 0 01-67.86 0z"}},{"tag":"path","attr":{"d":"M168.4 399.43c-5.48 5.49-14.27 7.63-24.85 9.46-23.77 4.05-44.76-16.49-40.49-40.52 1.63-9.11 6.45-21.88 9.45-24.88a4.37 4.37 0 00-3.65-7.45 60 60 0 00-35.13 17.12C50.22 376.69 48 464 48 464s87.36-2.22 110.87-25.75A59.69 59.69 0 00176 403.09c.37-4.18-4.72-6.67-7.6-3.66z"}}]})(props);
   }
 
   /**
@@ -155,6 +153,9 @@
        */
       static async getSetting(key, defaultVal) {
           return (await this.serverAPI.callPluginMethod("getSetting", { key: key, defaultVal: defaultVal })).result;
+      }
+      static async getImage(key) {
+          return (await this.serverAPI.callPluginMethod("getImage", { filepath: key })).result;
       }
       /**
        * Sets the value of a plugin's setting.
@@ -252,11 +253,6 @@
       }
   }
 
-  // THIS FILE IS AUTO GENERATED
-  function FaTrashAlt (props) {
-    return GenIcon({"tag":"svg","attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"}}]})(props);
-  }
-
   /**
    * A component for the label of a ScreenshotLauncher.
    * @param props The props for this ScreenshotLabel.
@@ -305,9 +301,9 @@
        * Determines which action to run when the interactable is selected.
        * @param screenshot The screenshot associated with this screenshotLauncher.
        */
-      async function onAction(screenshot) {
+      async function onAction() {
           PyInterop.toast("DeckShare", "Manually sharing screenshot");
-          await PyInterop.uploadScreenshot(screenshot.path);
+          await PyInterop.uploadScreenshot(props.screenshot.path);
       }
       return (window.SP_REACT.createElement(React.Fragment, null,
           window.SP_REACT.createElement("style", null, `
@@ -324,13 +320,13 @@
           window.SP_REACT.createElement("div", { className: "custom-buttons" },
               window.SP_REACT.createElement(deckyFrontendLib.Field, { label: window.SP_REACT.createElement(ScreenshotLabel, { screenshot: props.screenshot, isRunning: isRunning }) },
                   window.SP_REACT.createElement(deckyFrontendLib.Focusable, { style: { display: "flex", width: "100%" } },
-                      window.SP_REACT.createElement(deckyFrontendLib.DialogButton, { onClick: () => onAction(props.screenshot), style: {
+                      window.SP_REACT.createElement(deckyFrontendLib.DialogButton, { onClick: () => onAction(), style: {
                               minWidth: "30px",
                               maxWidth: "60px",
                               display: "flex",
                               justifyContent: "center",
                               alignItems: "center"
-                          } }, (isRunning) ? window.SP_REACT.createElement(FaTrashAlt, { color: "#e24a4a" }) : window.SP_REACT.createElement(IoRocketSharp, { color: "#36ff04" })))))));
+                          } }, props.screenshot.base64 && window.SP_REACT.createElement("img", { style: { maxWidth: 60, maxHeight: 32 }, src: `data:image/png;base64,${props.screenshot.base64}`, alt: "Screenshot" })))))));
   };
 
   class ScreenshotsState {
@@ -1623,7 +1619,9 @@
        */
       init(screenshots) {
           this.liten();
+          PyInterop.log(JSON.stringify(screenshots));
           for (const screenshot of Object.values(screenshots)) {
+              //PyInterop.log(JSON.stringify(screenshot))
               this.updateHooks(screenshot);
           }
       }
@@ -1634,22 +1632,6 @@
        */
       getScreenshotById(screenshotId) {
           return this.state.getPublicState().screenshots[screenshotId];
-      }
-      /**
-       * Sets wether a screenshot is running or not.
-       * @param screenshotId The id of the screenshot to set.
-       * @param value The new value.
-       */
-      setIsRunning(screenshotId, value) {
-          this.state.setIsRunning(screenshotId, value);
-      }
-      /**
-       * Checks if a screenshot is running.
-       * @param shorcutId The id of the screenshot to check for.
-       * @returns True if the screenshot is running.
-       */
-      checkIfRunning(shorcutId) {
-          return Object.keys(this.instancesController.instances).includes(shorcutId);
       }
       /**
        * Updates the hooks for a screenshot.

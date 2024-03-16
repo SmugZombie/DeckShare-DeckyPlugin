@@ -7,6 +7,7 @@ import ssl
 import vdf
 import http.client
 import mimetypes
+import base64
 from py_backend.instanceManager import InstanceManager
 from py_backend.jsInterop import JsInteropManager
 from settings import SettingsManager
@@ -22,7 +23,7 @@ class Plugin:
   guidesDirPath = f"/home/{pluginUser}/homebrew/plugins/deckshare-plugin/guides"
   settingsManager = SettingsManager(name='DeckShare', settings_directory=pluginSettingsDir)
   steamdir = "/home/deck/.local/share/Steam/"
-  version = "0.1.0beta"
+  version = "0.1.1beta"
   discordWebhookURLBase = "https://discord.com/api/webhooks/"
 
   # Validates the Webhook URL by sending a GET request to the URL and checking the status code of the response
@@ -151,13 +152,17 @@ class Plugin:
       if "thumbnails" not in root:
         for file in files:
           if file.endswith(".jpg"):
-            screenshots[file] = {'path': os.path.join(root, file), 'name': file, 'id': file}
+            screenshots[file] = {'path': os.path.join(root, file), 'name': file, 'id': file }
 
     # Convert the dictionary to a list of tuples and sort it based on the file name
     sorted_screenshots = sorted(screenshots.items(), key=lambda x: x[0], reverse=True)
 
     # Get only the first 5 elements of the list
     sorted_screenshots = sorted_screenshots[:5]
+
+    # Generate base64 for each remaining screenshot
+    for file_name, screenshot_info in sorted_screenshots:
+      screenshot_info['base64'] = image_to_base64(screenshot_info['path'])
 
     # Convert the list of tuples back to a dictionary
     return dict(sorted_screenshots)
@@ -201,6 +206,13 @@ class Plugin:
   async def getGuides(self):
     self._getGuides(self)
     return self.guides
+
+  async def getImage(self, filepath):
+    try:
+      return await image_to_base64(filepath)
+    except Exception as e:
+      log(f"An error occurred [getImage]: {e}")
+    return False
 
 # Returns the newest created screenshot in the Steam screenshots directory
 def get_newest_jpg(self):
@@ -296,3 +308,15 @@ async def upload_file(filename, webhook_url):
     except Exception as e:
       log(f"An error occurred: {e}")
       return False
+
+def image_to_base64(image_path):
+  try:
+    with open(image_path, "rb") as image_file:
+      # Read image file
+      image_data = image_file.read()
+      # Encode image data as base64
+      base64_encoded = base64.b64encode(image_data).decode('utf-8')
+      return base64_encoded
+  except Exception as e:
+    log(f"Error: {e}")
+    return None

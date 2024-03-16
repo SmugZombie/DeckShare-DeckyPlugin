@@ -66,8 +66,9 @@ export class HookController {
    */
   init(screenshots: ScreenshotsDictionary): void {
     this.liten();
-
+    PyInterop.log(JSON.stringify(screenshots))
     for (const screenshot of Object.values(screenshots)) {
+      //PyInterop.log(JSON.stringify(screenshot))
       this.updateHooks(screenshot);
     }
   }
@@ -79,24 +80,6 @@ export class HookController {
    */
   private getScreenshotById(screenshotId: string): Screenshot {
     return this.state.getPublicState().screenshots[screenshotId];
-  }
-
-  /**
-   * Sets wether a screenshot is running or not.
-   * @param screenshotId The id of the screenshot to set.
-   * @param value The new value.
-   */
-  private setIsRunning(screenshotId: string, value: boolean): void {
-    this.state.setIsRunning(screenshotId, value);
-  }
-
-  /**
-   * Checks if a screenshot is running.
-   * @param shorcutId The id of the screenshot to check for.
-   * @returns True if the screenshot is running.
-   */
-  private checkIfRunning(shorcutId: string): boolean {
-    return Object.keys(this.instancesController.instances).includes(shorcutId);
   }
 
   /**
