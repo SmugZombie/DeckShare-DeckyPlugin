@@ -297,7 +297,7 @@
    */
   const ScreenshotLauncher = (props) => {
       const [isRunning] = React.useState(false);
-      const [imageSrc, setImageSrc] = React.useState(null); // State to store Base64 data
+      React.useState(null); // State to store Base64 data
       const [imgBase64, setImgBase64] = React.useState("");
       // Function to load the image and convert it to Base64
       React.useEffect(() => {
@@ -347,7 +347,7 @@
                               display: "flex",
                               justifyContent: "center",
                               alignItems: "center"
-                          } }, imageSrc && window.SP_REACT.createElement("img", { style: { maxWidth: 60, maxHeight: 32 }, src: imageSrc, alt: "Screenshot" })))))));
+                          } }, imgBase64 && window.SP_REACT.createElement("img", { style: { maxWidth: 60, maxHeight: 32 }, src: `data:image/png;base64,${imgBase64}`, alt: "Screenshot" })))))));
   };
 
   class ScreenshotsState {

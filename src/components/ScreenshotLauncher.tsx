@@ -120,7 +120,7 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
               alignItems: "center"
             }}>
               {/* Render the image with the Base64 data */}
-              {imageSrc && <img style={{ maxWidth: 60, maxHeight: 32 }} src={imageSrc} alt="Screenshot" />}
+              {imgBase64 && <img style={{ maxWidth: 60, maxHeight: 32 }} src={`data:image/png;base64,${imgBase64}`} alt="Screenshot" />}
             </DialogButton>
           </Focusable>
         </Field>
