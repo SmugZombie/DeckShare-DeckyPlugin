@@ -106,51 +106,6 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
   );
 };
 
-const ScreenshotsManagerRouter: VFC<{ guides: GuidePages }> = ({ guides }) => {
-  const guidePages = {}
-  Object.entries(guides).map(([ guideName, guide ]) => {
-    guidePages[guideName] = {
-      title: guideName,
-      content: <GuidePage content={guide} />,
-      route: `/deckshare-config/guides-${guideName.toLowerCase().replace(/ /g, "-")}`,
-      icon: <MdNumbers />,
-      hideTitle: true
-    }
-  });
-
-  return (
-    <SidebarNavigation
-      title="Plugin Config"
-      showTitle
-      pages={[
-        {
-          title: "Add Screenshot",
-          content: <AddScreenshot />,
-          route: "/deckshare-config/add",
-          icon: <HiViewGridAdd />
-        },
-        {
-          title: "Manage Screenshots",
-          content: <ManageScreenshots />,
-          route: "/deckshare-config/manage",
-          icon: <FaEdit />
-        },
-        {
-          title: "Settings",
-          content: <Settings />,
-          route: "/deckshare-config/settings",
-          icon: <IoSettingsSharp />
-        },
-        "separator",
-        guidePages["Overview"],
-        guidePages["Managing Screenshots"],
-        guidePages["Custom Scripts"],
-        guidePages["Using Hooks"]
-      ]}
-    />
-  );
-};
-
 export default definePlugin((serverApi: ServerAPI) => {
   PyInterop.setServer(serverApi);
 
@@ -158,17 +113,6 @@ export default definePlugin((serverApi: ServerAPI) => {
   PluginController.setup(serverApi, state);
 
   const loginHook = PluginController.initOnLogin();
-
-  PyInterop.getGuides().then((res: ServerResponse<GuidePages>) => {
-    const guides = res.result as GuidePages;
-    console.log("Guides:", guides);
-
-    serverApi.routerHook.addRoute("/deckshare-config", () => (
-      <ScreenshotsContextProvider screenshotsStateClass={state}>
-        <ScreenshotsManagerRouter guides={guides} />
-      </ScreenshotsContextProvider>
-    ));
-  });
 
   return {
     title: <div className={staticClasses.Title}>DeckShare</div>,
