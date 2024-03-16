@@ -152,13 +152,17 @@ class Plugin:
       if "thumbnails" not in root:
         for file in files:
           if file.endswith(".jpg"):
-            screenshots[file] = {'path': os.path.join(root, file), 'name': file, 'id': file, 'base64': image_to_base64(os.path.join(root, file))}
+            screenshots[file] = {'path': os.path.join(root, file), 'name': file, 'id': file }
 
     # Convert the dictionary to a list of tuples and sort it based on the file name
     sorted_screenshots = sorted(screenshots.items(), key=lambda x: x[0], reverse=True)
 
     # Get only the first 5 elements of the list
     sorted_screenshots = sorted_screenshots[:5]
+
+    # Generate base64 for each remaining screenshot
+    for file_name, screenshot_info in sorted_screenshots:
+      screenshot_info['base64'] = image_to_base64(screenshot_info['path'])
 
     # Convert the list of tuples back to a dictionary
     return dict(sorted_screenshots)
