@@ -1525,112 +1525,48 @@
           this.screenshotHooks[hook].delete(screenshot.id);
           PyInterop.log(`Unregistered hook: ${hook} for screenshot: ${screenshot.name} Id: ${screenshot.id}`);
       }
-      async runScreenshots(hook, flags) {
-          flags["h"] = hook;
-          for (const screenshotId of this.screenshotHooks[hook].values()) {
-              if (!this.checkIfRunning(screenshotId)) {
-                  const screenshot = this.getScreenshotById(screenshotId);
-                  const createdInstance = await this.instancesController.createInstance(screenshot);
-                  if (createdInstance) {
-                      PyInterop.log(`Created Instance for screenshot { Id: ${screenshot.id}, Name: ${screenshot.name} } on hook: ${hook}`);
-                      const didLaunch = await this.instancesController.launchInstance(screenshot.id, async () => {
-                          if (this.checkIfRunning(screenshot.id) && screenshot.isApp) {
-                              this.setIsRunning(screenshot.id, false);
-                              const killRes = await this.instancesController.killInstance(screenshot.id);
-                              if (killRes) {
-                                  deckyFrontendLib.Navigation.Navigate("/library/home");
-                                  deckyFrontendLib.Navigation.CloseSideMenus();
-                              }
-                              else {
-                                  PyInterop.toast("Error", "Failed to kill screenshot.");
-                              }
-                          }
-                      }, flags);
-                      if (!didLaunch) {
-                          PyInterop.log(`Failed to launch instance for screenshot { Id: ${screenshot.id}, Name: ${screenshot.name} } on hook: ${hook}`);
-                      }
-                      else {
-                          if (!screenshot.isApp) {
-                              PyInterop.log(`Registering for WebSocket messages of type: ${screenshot.id} on hook: ${hook}...`);
-                              this.webSocketClient.on(screenshot.id, (data) => {
-                                  if (data.type == "end") {
-                                      if (data.status == 0) {
-                                          PyInterop.toast(screenshot.name, "Screenshot execution finished.");
-                                      }
-                                      else {
-                                          PyInterop.toast(screenshot.name, "Screenshot execution was canceled.");
-                                      }
-                                      this.setIsRunning(screenshot.id, false);
-                                  }
-                              });
-                          }
-                          this.setIsRunning(screenshot.id, true);
-                      }
-                  }
-                  else {
-                      PyInterop.toast("Error", "Screenshot failed. Check the command.");
-                      PyInterop.log(`Failed to create instance for screenshot { Id: ${screenshot.id}, Name: ${screenshot.name} } on hook: ${hook}`);
+      async runScreenshots() {
+          try {
+              const autoupload = await PyInterop.getSetting("autoupload", false);
+              const notifications = await PyInterop.getSetting("notifications", false);
+              const screenshotsTaken = await PyInterop.getSetting("screenshotsTaken", 0);
+              const screenshotsShared = await PyInterop.getSetting("screenshotsShared", 0);
+              await PyInterop.setSetting("screenshotsTaken", screenshotsTaken + 1);
+              if (!autoupload) {
+                  PyInterop.log("Screenshot detected but auto upload is disabled");
+                  return;
+              }
+              let uploadStatus = await PyInterop.uploadScreenshots();
+              if (uploadStatus.result == "200") {
+                  await PyInterop.setSetting("screenshotsShared", screenshotsShared + 1);
+                  if (notifications) {
+                      PyInterop.toast("Deckshare Info", "Screenshots shared successfully");
                   }
               }
               else {
-                  PyInterop.log(`Skipping hook: ${hook} for screenshot: ${screenshotId} because it was already running.`);
+                  if (notifications) {
+                      PyInterop.toast("DeckShare Error", "Screenshots failed to upload");
+                  }
+                  PyInterop.log(JSON.stringify(uploadStatus));
               }
+          }
+          catch (e) {
+              PyInterop.log(e);
           }
       }
       /**
        * Sets up all of the hooks for the plugin.
        */
       liten() {
-          this.registeredHooks[Hook.LOG_IN] = this.steamController.registerForAuthStateChange(async (username) => {
-              this.runScreenshots(Hook.LOG_IN, { "u": username });
-          }, null, false);
-          this.registeredHooks[Hook.LOG_OUT] = this.steamController.registerForAuthStateChange(null, async (username) => {
-              this.runScreenshots(Hook.LOG_IN, { "u": username });
-          }, false);
-          this.registeredHooks[Hook.GAME_START] = this.steamController.registerForAllAppLifetimeNotifications((appId, data) => {
-              if (data.bRunning && (collectionStore.allAppsCollection.apps.has(appId) || collectionStore.deckDesktopApps.apps.has(appId))) {
-                  const app = collectionStore.allAppsCollection.apps.get(appId) ?? collectionStore.deckDesktopApps.apps.get(appId);
-                  if (app) {
-                      this.runScreenshots(Hook.GAME_START, { "i": appId.toString(), "n": app.display_name });
-                  }
-              }
-          });
-          this.registeredHooks[Hook.GAME_END] = this.steamController.registerForAllAppLifetimeNotifications((appId, data) => {
-              if (!data.bRunning && (collectionStore.allAppsCollection.apps.has(appId) || collectionStore.deckDesktopApps.apps.has(appId))) {
-                  const app = collectionStore.allAppsCollection.apps.get(appId) ?? collectionStore.deckDesktopApps.apps.get(appId);
-                  if (app) {
-                      this.runScreenshots(Hook.GAME_END, { "i": appId.toString(), "n": app.display_name });
-                  }
-              }
-          });
-          this.registeredHooks[Hook.GAME_INSTALL] = this.steamController.registerForGameInstall((appData) => {
-              this.runScreenshots(Hook.GAME_INSTALL, { "i": appData.appid.toString(), "n": appData.display_name });
-          });
-          this.registeredHooks[Hook.GAME_UPDATE] = this.steamController.registerForGameUpdate((appData) => {
-              this.runScreenshots(Hook.GAME_UPDATE, { "i": appData.appid.toString(), "n": appData.display_name });
-          });
-          this.registeredHooks[Hook.GAME_UNINSTALL] = this.steamController.registerForGameUninstall((appData) => {
-              this.runScreenshots(Hook.GAME_UNINSTALL, { "i": appData.appid.toString(), "n": appData.display_name });
-          });
-          this.registeredHooks[Hook.GAME_ACHIEVEMENT_UNLOCKED] = this.steamController.registerForGameAchievementNotification((data) => {
-              const appId = data.unAppID;
-              const app = collectionStore.localGamesCollection.apps.get(appId);
-              if (app) {
-                  this.runScreenshots(Hook.GAME_ACHIEVEMENT_UNLOCKED, { "i": appId.toString(), "n": app.display_name, "a": data.achievement.strName });
-              }
-          });
           this.registeredHooks[Hook.SCREENSHOT_TAKEN] = this.steamController.registerForScreenshotNotification((data) => {
-              const appId = data.unAppID;
-              const app = collectionStore.localGamesCollection.apps.get(appId);
-              if (app) {
-                  this.runScreenshots(Hook.GAME_ACHIEVEMENT_UNLOCKED, { "i": appId.toString(), "n": app.display_name, "p": data.details.strUrl });
+              try {
+                  const appId = data.unAppID;
+                  const app = collectionStore.localGamesCollection.apps.get(appId);
+                  this.runScreenshots();
               }
-          });
-          this.registeredHooks[Hook.DECK_SLEEP] = this.steamController.registerForSleepStart(() => {
-              this.runScreenshots(Hook.DECK_SLEEP, {});
-          });
-          this.registeredHooks[Hook.DECK_SHUTDOWN] = this.steamController.registerForShutdownStart(() => {
-              this.runScreenshots(Hook.DECK_SHUTDOWN, {});
+              catch (e) {
+                  PyInterop.log(e);
+              }
           });
       }
       /**
@@ -1714,14 +1650,12 @@
        */
       static async init() {
           PyInterop.log("PluginController initializing...");
-          //* clean out all screenshots with names that start with "DeckShare - Instance"
-          const oldInstances = (await this.screenshotsController.getScreenshots()).filter((screenshot) => screenshot.strDisplayName.startsWith("DeckShare - Instance"));
-          if (oldInstances.length > 0) {
-              for (const instance of oldInstances) {
-                  await this.screenshotsController.removeScreenshotById(instance.unAppID);
-              }
-          }
           this.webSocketClient.connect();
+          const webhookUrl = (await PyInterop.getWebhookUrl()).result;
+          if (webhookUrl == "" || webhookUrl == null || webhookUrl == "False" || webhookUrl == "https://discord.com/api/webhooks/") {
+              PyInterop.log("Please configure the webhook url in the plugin settings.");
+              PyInterop.toast("DeckShare", "Please configure the webhook url in the plugin settings.");
+          }
           const screenshots = (await PyInterop.getScreenshots()).result;
           if (typeof screenshots === "string") {
               PyInterop.log(`Failed to get screenshots for hooks. Error: ${screenshots}`);
@@ -2170,7 +2104,7 @@
                       window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { label: "AutoShare", checked: autoUpload, onChange: (value) => toggleAutoUpload(value) }),
                       window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { label: "Notifications", checked: notifications, onChange: (value) => toggleNotifications(value) }),
                       window.SP_REACT.createElement(deckyFrontendLib.TextField, { value: webhookUrl, onChange: (e) => setWebhookUrl(e.target.value) }),
-                      window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { label: "Save Webhook Url", checked: false, onChange: () => saveWebhookUrl(webhookUrl) }),
+                      window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { label: "Save Webhook Url", checked: isSaving, onChange: () => saveWebhookUrl(webhookUrl) }),
                       (isError) ? (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
                           "Error: ",
                           errorMessage)) : (""),

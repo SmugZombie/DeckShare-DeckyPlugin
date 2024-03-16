@@ -150,57 +150,31 @@ export class HookController {
     PyInterop.log(`Unregistered hook: ${hook} for screenshot: ${screenshot.name} Id: ${screenshot.id}`);
   }
 
-  private async runScreenshots(hook: Hook, flags: { [flag: string ]: string }): Promise<void> {
-    flags["h"] = hook;
-
-    for (const screenshotId of this.screenshotHooks[hook].values()) {
-      if (!this.checkIfRunning(screenshotId)) {
-        const screenshot = this.getScreenshotById(screenshotId);
-        const createdInstance = await this.instancesController.createInstance(screenshot);
-
-        if (createdInstance) {
-          PyInterop.log(`Created Instance for screenshot { Id: ${screenshot.id}, Name: ${screenshot.name} } on hook: ${hook}`);
-          const didLaunch = await this.instancesController.launchInstance(screenshot.id, async () => {
-            if (this.checkIfRunning(screenshot.id) && screenshot.isApp) {
-              this.setIsRunning(screenshot.id, false);
-              const killRes = await this.instancesController.killInstance(screenshot.id);
-              if (killRes) {
-                Navigation.Navigate("/library/home");
-                Navigation.CloseSideMenus();
-              } else {
-                PyInterop.toast("Error", "Failed to kill screenshot.");
-              }
-            }
-          }, flags);
-          
-          if (!didLaunch) {
-            PyInterop.log(`Failed to launch instance for screenshot { Id: ${screenshot.id}, Name: ${screenshot.name} } on hook: ${hook}`);
-          } else {
-            if (!screenshot.isApp) {
-              PyInterop.log(`Registering for WebSocket messages of type: ${screenshot.id} on hook: ${hook}...`);
-    
-              this.webSocketClient.on(screenshot.id, (data: any) => {
-                if (data.type == "end") {
-                  if (data.status == 0) {
-                    PyInterop.toast(screenshot.name, "Screenshot execution finished.");
-                  } else {
-                    PyInterop.toast(screenshot.name, "Screenshot execution was canceled.");
-                  }
-    
-                  this.setIsRunning(screenshot.id, false);
-                }
-              });
-            }
-            
-            this.setIsRunning(screenshot.id, true);
-          }
-        } else {
-          PyInterop.toast("Error", "Screenshot failed. Check the command.");
-          PyInterop.log(`Failed to create instance for screenshot { Id: ${screenshot.id}, Name: ${screenshot.name} } on hook: ${hook}`);
-        }
-      } else {
-        PyInterop.log(`Skipping hook: ${hook} for screenshot: ${screenshotId} because it was already running.`);
+  private async runScreenshots(): Promise<void> {
+    try{
+      const autoupload = await PyInterop.getSetting("autoupload", false);
+      const notifications = await PyInterop.getSetting("notifications", false);
+      const screenshotsTaken = await PyInterop.getSetting("screenshotsTaken", 0);
+      const screenshotsShared = await PyInterop.getSetting("screenshotsShared", 0);
+      await PyInterop.setSetting("screenshotsTaken", screenshotsTaken + 1);
+      if(!autoupload){
+        PyInterop.log("Screenshot detected but auto upload is disabled");
+        return;
       }
+      let uploadStatus = await PyInterop.uploadScreenshots();
+      if(uploadStatus.result == "200"){
+        await PyInterop.setSetting("screenshotsShared", screenshotsShared + 1);
+        if(notifications){
+          PyInterop.toast("Deckshare Info","Screenshots shared successfully");
+        }
+      }else{
+        if(notifications){
+          PyInterop.toast("DeckShare Error", "Screenshots failed to upload");
+        }
+        PyInterop.log(JSON.stringify(uploadStatus));
+      }
+    }catch(e){
+      PyInterop.log(e);
     }
   }
 
@@ -208,67 +182,17 @@ export class HookController {
    * Sets up all of the hooks for the plugin.
    */
   liten(): void {
-    this.registeredHooks[Hook.LOG_IN] = this.steamController.registerForAuthStateChange(async (username: string) => {
-      this.runScreenshots(Hook.LOG_IN, { "u": username});
-    }, null, false);
-
-    this.registeredHooks[Hook.LOG_OUT] = this.steamController.registerForAuthStateChange(null, async (username: string) => {
-      this.runScreenshots(Hook.LOG_IN, { "u": username });
-    }, false);
-
-    this.registeredHooks[Hook.GAME_START] = this.steamController.registerForAllAppLifetimeNotifications((appId: number, data: LifetimeNotification) => {
-      if (data.bRunning && (collectionStore.allAppsCollection.apps.has(appId) || collectionStore.deckDesktopApps.apps.has(appId))) {
-        const app = collectionStore.allAppsCollection.apps.get(appId) ?? collectionStore.deckDesktopApps.apps.get(appId);
-        if (app) {
-          this.runScreenshots(Hook.GAME_START, { "i": appId.toString(), "n": app.display_name });
-        }
-      }
-    });
-
-    this.registeredHooks[Hook.GAME_END] = this.steamController.registerForAllAppLifetimeNotifications((appId: number, data: LifetimeNotification) => {
-      if (!data.bRunning && (collectionStore.allAppsCollection.apps.has(appId) || collectionStore.deckDesktopApps.apps.has(appId))) {
-        const app = collectionStore.allAppsCollection.apps.get(appId) ?? collectionStore.deckDesktopApps.apps.get(appId);
-        if (app) {
-          this.runScreenshots(Hook.GAME_END, { "i": appId.toString(), "n": app.display_name });
-        }
-      }
-    });
-
-    this.registeredHooks[Hook.GAME_INSTALL] = this.steamController.registerForGameInstall((appData: SteamAppOverview) => {
-      this.runScreenshots(Hook.GAME_INSTALL, { "i": appData.appid.toString(), "n": appData.display_name });
-    });
-
-    this.registeredHooks[Hook.GAME_UPDATE] = this.steamController.registerForGameUpdate((appData: SteamAppOverview) => {
-      this.runScreenshots(Hook.GAME_UPDATE, { "i": appData.appid.toString(), "n": appData.display_name });
-    });
-
-    this.registeredHooks[Hook.GAME_UNINSTALL] = this.steamController.registerForGameUninstall((appData: SteamAppOverview) => {
-      this.runScreenshots(Hook.GAME_UNINSTALL, { "i": appData.appid.toString(), "n": appData.display_name });
-    });
-    
-    this.registeredHooks[Hook.GAME_ACHIEVEMENT_UNLOCKED] = this.steamController.registerForGameAchievementNotification((data: AchievementNotification) => {
-      const appId = data.unAppID;
-      const app = collectionStore.localGamesCollection.apps.get(appId);
-      if (app) {
-        this.runScreenshots(Hook.GAME_ACHIEVEMENT_UNLOCKED, { "i": appId.toString(), "n": app.display_name, "a": data.achievement.strName });
-      }
-    });
 
     this.registeredHooks[Hook.SCREENSHOT_TAKEN] = this.steamController.registerForScreenshotNotification((data: ScreenshotNotification) => {
-      const appId = data.unAppID;
-      const app = collectionStore.localGamesCollection.apps.get(appId);
-      if (app) {
-        this.runScreenshots(Hook.GAME_ACHIEVEMENT_UNLOCKED, { "i": appId.toString(), "n": app.display_name, "p": data.details.strUrl });
+      try{
+        const appId = data.unAppID;
+        const app = collectionStore.localGamesCollection.apps.get(appId);
+        this.runScreenshots();
+      }catch(e){
+        PyInterop.log(e);
       }
     });
 
-    this.registeredHooks[Hook.DECK_SLEEP] = this.steamController.registerForSleepStart(() => {
-      this.runScreenshots(Hook.DECK_SLEEP, {});
-    });
-
-    this.registeredHooks[Hook.DECK_SHUTDOWN] = this.steamController.registerForShutdownStart(() => {
-      this.runScreenshots(Hook.DECK_SHUTDOWN, {});
-    });
   }
 
   /**

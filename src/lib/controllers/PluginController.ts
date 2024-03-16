@@ -98,17 +98,13 @@ export class PluginController {
    */
   static async init(): Promise<void> {
     PyInterop.log("PluginController initializing...");
-
-    //* clean out all screenshots with names that start with "DeckShare - Instance"
-    const oldInstances = (await this.screenshotsController.getScreenshots()).filter((screenshot:SteamAppDetails) => screenshot.strDisplayName.startsWith("DeckShare - Instance"));
-
-    if (oldInstances.length > 0) {
-      for (const instance of oldInstances) {
-        await this.screenshotsController.removeScreenshotById(instance.unAppID);
-      }
-    }
-
     this.webSocketClient.connect();
+
+    const webhookUrl = (await PyInterop.getWebhookUrl()).result;
+    if (webhookUrl == "" || webhookUrl == null || webhookUrl == "False" || webhookUrl == "https://discord.com/api/webhooks/") {
+      PyInterop.log("Please configure the webhook url in the plugin settings.")
+      PyInterop.toast("DeckShare", "Please configure the webhook url in the plugin settings.");
+    }
 
     const screenshots = (await PyInterop.getScreenshots()).result;
     if (typeof screenshots === "string") {
