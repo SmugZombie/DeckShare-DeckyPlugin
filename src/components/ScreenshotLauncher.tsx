@@ -65,14 +65,23 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
 
   // Function to load the image and convert it to Base64
   useEffect(() => {
+    const fetchImageAndConvertToBase64 = async () => {
+      try {
+        const response = await fetch(props.screenshot.path); // Fetch the image file
+        const blob = await response.blob(); // Convert the response to a Blob
+        const reader = new FileReader();
+        reader.onload = () => {
+          // Convert the image to Base64 and set the state
+          setImageSrc(reader.result as string);
+        };
+        reader.readAsDataURL(blob); // Read the Blob as a data URL (Base64)
+      } catch (error) {
+        console.error('Error fetching or converting image:', error);
+      }
+    };
+
     if (props.screenshot.path) {
-      // Load the image file
-      const reader = new FileReader();
-      reader.onload = () => {
-        // Convert the image to Base64 and set the state
-        setImageSrc(reader.result as string);
-      };
-      reader.readAsDataURL(props.screenshot.path);
+      fetchImageAndConvertToBase64();
     }
   }, [props.screenshot.path]); // Run only when screenshot path changes
 
