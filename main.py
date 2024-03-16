@@ -306,6 +306,7 @@ async def upload_file(filename, webhook_url):
 
 def image_to_base64(image_path):
   try:
+    log(image_path)
     with open(image_path, "rb") as image_file:
       # Read image file
       image_data = image_file.read()
