@@ -22,7 +22,7 @@ class Plugin:
   guidesDirPath = f"/home/{pluginUser}/homebrew/plugins/deckshare-plugin/guides"
   settingsManager = SettingsManager(name='DeckShare', settings_directory=pluginSettingsDir)
   steamdir = "/home/deck/.local/share/Steam/"
-  version = "0.0.4beta"
+  version = "0.1.0beta"
   discordWebhookURLBase = "https://discord.com/api/webhooks/"
 
   # Validates the Webhook URL by sending a GET request to the URL and checking the status code of the response
