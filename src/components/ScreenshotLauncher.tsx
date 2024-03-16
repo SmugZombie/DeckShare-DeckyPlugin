@@ -87,6 +87,10 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
       </style>
       <div className="custom-buttons">
         <Field label={<ScreenshotLabel screenshot={props.screenshot} isRunning={isRunning} />}>
+          <img
+              style={{ maxWidth: 32, maxHeight: 32 }}
+              src={ Screenshot.path }
+          />
           <Focusable style={{ display: "flex", width: "100%" }}>
             <DialogButton onClick={() => onAction(props.screenshot)} style={{
               minWidth: "30px",
@@ -95,7 +99,7 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
               justifyContent: "center",
               alignItems: "center"
             }}>
-              { (isRunning) ? <FaTrashAlt color="#e24a4a" /> : <IoRocketSharp color="#36ff04" /> }
+              <IoRocketSharp color="#36ff04" />
             </DialogButton>
           </Focusable>
         </Field>
