@@ -56,16 +56,16 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
     setIsSaving(true);
     setIsSaved(false);
     await PyInterop.setWebhookUrl(webhookUrl).then((res) => {
+      setIsSaving(false);
       if (res.result?.toLowerCase().includes("invalid")) {
         setIsError(true);
         setErrorMessage(res.result);
-        setTimeout(() => { setIsError(false); setErrorMessage(""); setIsSaving(false); setIsSaved(false) }, 3000);
+        setTimeout(() => { setIsError(false); setErrorMessage(""); setIsSaved(false) }, 3000);
       }else{
         if(res.result){
           setIsError(false);
           setErrorMessage("");
           setWebhookUrl(res.result);
-          setIsSaving(false);
           setIsSaved(true);
           setTimeout(() => { setIsSaved(false); }, 3000);
         }

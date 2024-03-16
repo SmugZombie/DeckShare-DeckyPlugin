@@ -258,6 +258,177 @@
   }
 
   /**
+   * A component for the label of a ScreenshotLauncher.
+   * @param props The props for this ScreenshotLabel.
+   * @returns A ScreenshotLabel component.
+   */
+  const ScreenshotLabel = (props) => {
+      return (window.SP_REACT.createElement(React.Fragment, null,
+          window.SP_REACT.createElement("style", null, `
+        @keyframes deckshare-running-screenshot-gradient {
+          0% {
+            background-color:  #36ff04;
+          }
+          50% {
+            background-color: #00d836;
+          }
+          100% {
+            background-color:  #36ff04;
+          }
+        }
+      `),
+          window.SP_REACT.createElement("div", { style: {
+                  "height": "100%",
+                  "display": "flex",
+                  "flexDirection": "row",
+                  "alignItems": "center"
+              } },
+              window.SP_REACT.createElement("div", null, props.screenshot.name),
+              window.SP_REACT.createElement("div", { style: {
+                      "visibility": props.isRunning ? "visible" : "hidden",
+                      "marginLeft": "7px",
+                      "width": "12px",
+                      "height": "12px",
+                      "borderRadius": "50%",
+                      "backgroundColor": "#36ff04",
+                      "animation": "gradient 3s ease-in-out infinite"
+                  } }))));
+  };
+  /**
+   * A component for launching screenshots.
+   * @param props The ScreenshotLauncher's props.
+   * @returns The ScreenshotLauncher component.
+   */
+  const ScreenshotLauncher = (props) => {
+      const [isRunning] = React.useState(false);
+      /**
+       * Determines which action to run when the interactable is selected.
+       * @param screenshot The screenshot associated with this screenshotLauncher.
+       */
+      async function onAction(screenshot) {
+          PyInterop.toast("DeckShare", "Manually sharing screenshot");
+          await PyInterop.uploadScreenshot(screenshot.path);
+      }
+      return (window.SP_REACT.createElement(React.Fragment, null,
+          window.SP_REACT.createElement("style", null, `
+          .custom-buttons {
+            width: inherit;
+            height: inherit;
+            display: inherit;
+          }
+
+          .custom-buttons .${deckyFrontendLib.gamepadDialogClasses.FieldChildren} {
+            margin: 0px 16px;
+          }
+      `),
+          window.SP_REACT.createElement("div", { className: "custom-buttons" },
+              window.SP_REACT.createElement(deckyFrontendLib.Field, { label: window.SP_REACT.createElement(ScreenshotLabel, { screenshot: props.screenshot, isRunning: isRunning }) },
+                  window.SP_REACT.createElement(deckyFrontendLib.Focusable, { style: { display: "flex", width: "100%" } },
+                      window.SP_REACT.createElement(deckyFrontendLib.DialogButton, { onClick: () => onAction(props.screenshot), style: {
+                              minWidth: "30px",
+                              maxWidth: "60px",
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center"
+                          } }, (isRunning) ? window.SP_REACT.createElement(FaTrashAlt, { color: "#e24a4a" }) : window.SP_REACT.createElement(IoRocketSharp, { color: "#36ff04" })))))));
+  };
+
+  class ScreenshotsState {
+      constructor() {
+          this.screenshots = {};
+          this.screenshotsList = [];
+          this.runningScreenshots = new Set();
+          this.reorderableScreenshots = [];
+          this.currentGame = null;
+          this.gameRunning = false;
+          this.eventBus = new EventTarget();
+      }
+      getPublicState() {
+          return {
+              "screenshots": this.screenshots,
+              "screenshotsList": this.screenshotsList,
+              "runningScreenshots": this.runningScreenshots,
+              "reorderableScreenshots": this.reorderableScreenshots,
+              "currentGame": this.currentGame,
+              "gameRunning": this.gameRunning
+          };
+      }
+      setIsRunning(screenshotId, value) {
+          if (value) {
+              this.runningScreenshots.add(screenshotId);
+          }
+          else {
+              this.runningScreenshots.delete(screenshotId);
+          }
+          this.runningScreenshots = new Set(this.runningScreenshots.values());
+          this.forceUpdate();
+      }
+      setCurrentGame(overview) {
+          this.currentGame = overview;
+          this.forceUpdate();
+      }
+      setGameRunning(isRunning) {
+          this.gameRunning = isRunning;
+          this.forceUpdate();
+      }
+      setScreenshots(screenshots) {
+          this.screenshots = screenshots;
+          this.screenshotsList = Object.values(this.screenshots).sort((a, b) => a.position - b.position);
+          this.reorderableScreenshots = [];
+          for (let i = 0; i < this.screenshotsList.length; i++) {
+              const screenshot = this.screenshotsList[i];
+              this.reorderableScreenshots[i] = {
+                  "label": screenshot.name,
+                  "data": screenshot,
+                  "position": screenshot.position
+              };
+          }
+          this.reorderableScreenshots.sort((a, b) => a.position - b.position);
+          this.forceUpdate();
+      }
+      forceUpdate() {
+          this.eventBus.dispatchEvent(new Event("stateUpdate"));
+      }
+  }
+  const ScreenshotsContext = React.createContext(null);
+  const useScreenshotsState = () => React.useContext(ScreenshotsContext);
+  const ScreenshotsContextProvider = ({ children, screenshotsStateClass }) => {
+      const [publicState, setPublicState] = React.useState({
+          ...screenshotsStateClass.getPublicState()
+      });
+      React.useEffect(() => {
+          function onUpdate() {
+              setPublicState({ ...screenshotsStateClass.getPublicState() });
+          }
+          screenshotsStateClass.eventBus
+              .addEventListener("stateUpdate", onUpdate);
+          return () => {
+              screenshotsStateClass.eventBus
+                  .removeEventListener("stateUpdate", onUpdate);
+          };
+      }, []);
+      const setScreenshots = (screenshots) => {
+          screenshotsStateClass.setScreenshots(screenshots);
+      };
+      const setIsRunning = (screenshotId, value) => {
+          screenshotsStateClass.setIsRunning(screenshotId, value);
+      };
+      const setCurrentGame = (overview) => {
+          screenshotsStateClass.setCurrentGame(overview);
+      };
+      const setGameRunning = (isRunning) => {
+          screenshotsStateClass.setGameRunning(isRunning);
+      };
+      return (window.SP_REACT.createElement(ScreenshotsContext.Provider, { value: {
+              ...publicState,
+              setScreenshots,
+              setIsRunning,
+              setCurrentGame,
+              setGameRunning
+          } }, children));
+  };
+
+  /**
    * Controller class for screenshots.
    */
   class ScreenshotsController {
@@ -1540,12 +1711,12 @@
               if (uploadStatus.result == "200") {
                   await PyInterop.setSetting("screenshotsShared", screenshotsShared + 1);
                   if (notifications) {
-                      PyInterop.toast("Deckshare Info", "Screenshots shared successfully");
+                      PyInterop.toast("Deckshare", "Screenshots shared successfully");
                   }
               }
               else {
                   if (notifications) {
-                      PyInterop.toast("DeckShare Error", "Screenshots failed to upload");
+                      PyInterop.toast("DeckShare", "Error! Screenshots failed to upload");
                   }
                   PyInterop.log(JSON.stringify(uploadStatus));
               }
@@ -1751,228 +1922,6 @@
       }
   }
 
-  class ScreenshotsState {
-      constructor() {
-          this.screenshots = {};
-          this.screenshotsList = [];
-          this.runningScreenshots = new Set();
-          this.reorderableScreenshots = [];
-          this.currentGame = null;
-          this.gameRunning = false;
-          this.eventBus = new EventTarget();
-      }
-      getPublicState() {
-          return {
-              "screenshots": this.screenshots,
-              "screenshotsList": this.screenshotsList,
-              "runningScreenshots": this.runningScreenshots,
-              "reorderableScreenshots": this.reorderableScreenshots,
-              "currentGame": this.currentGame,
-              "gameRunning": this.gameRunning
-          };
-      }
-      setIsRunning(screenshotId, value) {
-          if (value) {
-              this.runningScreenshots.add(screenshotId);
-          }
-          else {
-              this.runningScreenshots.delete(screenshotId);
-          }
-          this.runningScreenshots = new Set(this.runningScreenshots.values());
-          this.forceUpdate();
-      }
-      setCurrentGame(overview) {
-          this.currentGame = overview;
-          this.forceUpdate();
-      }
-      setGameRunning(isRunning) {
-          this.gameRunning = isRunning;
-          this.forceUpdate();
-      }
-      setScreenshots(screenshots) {
-          this.screenshots = screenshots;
-          this.screenshotsList = Object.values(this.screenshots).sort((a, b) => a.position - b.position);
-          this.reorderableScreenshots = [];
-          for (let i = 0; i < this.screenshotsList.length; i++) {
-              const screenshot = this.screenshotsList[i];
-              this.reorderableScreenshots[i] = {
-                  "label": screenshot.name,
-                  "data": screenshot,
-                  "position": screenshot.position
-              };
-          }
-          this.reorderableScreenshots.sort((a, b) => a.position - b.position);
-          this.forceUpdate();
-      }
-      forceUpdate() {
-          this.eventBus.dispatchEvent(new Event("stateUpdate"));
-      }
-  }
-  const ScreenshotsContext = React.createContext(null);
-  const useScreenshotsState = () => React.useContext(ScreenshotsContext);
-  const ScreenshotsContextProvider = ({ children, screenshotsStateClass }) => {
-      const [publicState, setPublicState] = React.useState({
-          ...screenshotsStateClass.getPublicState()
-      });
-      React.useEffect(() => {
-          function onUpdate() {
-              setPublicState({ ...screenshotsStateClass.getPublicState() });
-          }
-          screenshotsStateClass.eventBus
-              .addEventListener("stateUpdate", onUpdate);
-          return () => {
-              screenshotsStateClass.eventBus
-                  .removeEventListener("stateUpdate", onUpdate);
-          };
-      }, []);
-      const setScreenshots = (screenshots) => {
-          screenshotsStateClass.setScreenshots(screenshots);
-      };
-      const setIsRunning = (screenshotId, value) => {
-          screenshotsStateClass.setIsRunning(screenshotId, value);
-      };
-      const setCurrentGame = (overview) => {
-          screenshotsStateClass.setCurrentGame(overview);
-      };
-      const setGameRunning = (isRunning) => {
-          screenshotsStateClass.setGameRunning(isRunning);
-      };
-      return (window.SP_REACT.createElement(ScreenshotsContext.Provider, { value: {
-              ...publicState,
-              setScreenshots,
-              setIsRunning,
-              setCurrentGame,
-              setGameRunning
-          } }, children));
-  };
-
-  /**
-   * A component for the label of a ScreenshotLauncher.
-   * @param props The props for this ScreenshotLabel.
-   * @returns A ScreenshotLabel component.
-   */
-  const ScreenshotLabel = (props) => {
-      return (window.SP_REACT.createElement(React.Fragment, null,
-          window.SP_REACT.createElement("style", null, `
-        @keyframes deckshare-running-screenshot-gradient {
-          0% {
-            background-color:  #36ff04;
-          }
-          50% {
-            background-color: #00d836;
-          }
-          100% {
-            background-color:  #36ff04;
-          }
-        }
-      `),
-          window.SP_REACT.createElement("div", { style: {
-                  "height": "100%",
-                  "display": "flex",
-                  "flexDirection": "row",
-                  "alignItems": "center"
-              } },
-              window.SP_REACT.createElement("div", null, props.screenshot.name),
-              window.SP_REACT.createElement("div", { style: {
-                      "visibility": props.isRunning ? "visible" : "hidden",
-                      "marginLeft": "7px",
-                      "width": "12px",
-                      "height": "12px",
-                      "borderRadius": "50%",
-                      "backgroundColor": "#36ff04",
-                      "animation": "gradient 3s ease-in-out infinite"
-                  } }))));
-  };
-  /**
-   * A component for launching screenshots.
-   * @param props The ScreenshotLauncher's props.
-   * @returns The ScreenshotLauncher component.
-   */
-  const ScreenshotLauncher = (props) => {
-      const { runningScreenshots, setIsRunning } = useScreenshotsState();
-      const [isRunning, _setIsRunning] = React.useState(PluginController.checkIfRunning(props.screenshot.id));
-      React.useEffect(() => {
-          if (PluginController.checkIfRunning(props.screenshot.id) && !runningScreenshots.has(props.screenshot.id)) {
-              setIsRunning(props.screenshot.id, true);
-          }
-      }, []);
-      React.useEffect(() => {
-          _setIsRunning(runningScreenshots.has(props.screenshot.id));
-      }, [runningScreenshots]);
-      /**
-       * Determines which action to run when the interactable is selected.
-       * @param screenshot The screenshot associated with this screenshotLauncher.
-       */
-      async function onAction(screenshot) {
-          if (isRunning) {
-              const res = await PluginController.closeScreenshot(screenshot);
-              if (!res) {
-                  PyInterop.toast("Error", "Failed to close screenshot.");
-              }
-              else {
-                  setIsRunning(screenshot.id, false);
-              }
-          }
-          else {
-              const res = await PluginController.launchScreenshot(screenshot, async () => {
-                  if (PluginController.checkIfRunning(screenshot.id) && screenshot.isApp) {
-                      setIsRunning(screenshot.id, false);
-                      const killRes = await PluginController.killScreenshot(screenshot);
-                      if (killRes) {
-                          deckyFrontendLib.Navigation.Navigate("/library/home");
-                          deckyFrontendLib.Navigation.CloseSideMenus();
-                      }
-                      else {
-                          PyInterop.toast("Error", "Failed to kill screenshot.");
-                      }
-                  }
-              });
-              if (!res) {
-                  PyInterop.toast("Error", "Screenshot failed. Check the command.");
-              }
-              else {
-                  if (!screenshot.isApp) {
-                      PyInterop.log(`Registering for WebSocket messages of type: ${screenshot.id}...`);
-                      PluginController.onWebSocketEvent(screenshot.id, (data) => {
-                          if (data.type == "end") {
-                              if (data.status == 0) {
-                                  PyInterop.toast(screenshot.name, "Screenshot execution finished.");
-                              }
-                              else {
-                                  PyInterop.toast(screenshot.name, "Screenshot execution was canceled.");
-                              }
-                              setIsRunning(screenshot.id, false);
-                          }
-                      });
-                  }
-                  setIsRunning(screenshot.id, true);
-              }
-          }
-      }
-      return (window.SP_REACT.createElement(React.Fragment, null,
-          window.SP_REACT.createElement("style", null, `
-          .custom-buttons {
-            width: inherit;
-            height: inherit;
-            display: inherit;
-          }
-
-          .custom-buttons .${deckyFrontendLib.gamepadDialogClasses.FieldChildren} {
-            margin: 0px 16px;
-          }
-      `),
-          window.SP_REACT.createElement("div", { className: "custom-buttons" },
-              window.SP_REACT.createElement(deckyFrontendLib.Field, { label: window.SP_REACT.createElement(ScreenshotLabel, { screenshot: props.screenshot, isRunning: isRunning }) },
-                  window.SP_REACT.createElement(deckyFrontendLib.Focusable, { style: { display: "flex", width: "100%" } },
-                      window.SP_REACT.createElement(deckyFrontendLib.DialogButton, { onClick: () => onAction(props.screenshot), style: {
-                              minWidth: "30px",
-                              maxWidth: "60px",
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center"
-                          } }, (isRunning) ? window.SP_REACT.createElement(FaTrashAlt, { color: "#e24a4a" }) : window.SP_REACT.createElement(IoRocketSharp, { color: "#36ff04" })))))));
-  };
-
   const Content = ({}) => {
       const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
       const [webhookUrl, setWebhookUrl] = React.useState("");
@@ -1992,17 +1941,17 @@
           setIsSaving(true);
           setIsSaved(false);
           await PyInterop.setWebhookUrl(webhookUrl).then((res) => {
+              setIsSaving(false);
               if (res.result?.toLowerCase().includes("invalid")) {
                   setIsError(true);
                   setErrorMessage(res.result);
-                  setTimeout(() => { setIsError(false); setErrorMessage(""); setIsSaving(false); setIsSaved(false); }, 3000);
+                  setTimeout(() => { setIsError(false); setErrorMessage(""); setIsSaved(false); }, 3000);
               }
               else {
                   if (res.result) {
                       setIsError(false);
                       setErrorMessage("");
                       setWebhookUrl(res.result);
-                      setIsSaving(false);
                       setIsSaved(true);
                       setTimeout(() => { setIsSaved(false); }, 3000);
                   }

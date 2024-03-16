@@ -165,11 +165,11 @@ export class HookController {
       if(uploadStatus.result == "200"){
         await PyInterop.setSetting("screenshotsShared", screenshotsShared + 1);
         if(notifications){
-          PyInterop.toast("Deckshare Info","Screenshots shared successfully");
+          PyInterop.toast("Deckshare","Screenshots shared successfully");
         }
       }else{
         if(notifications){
-          PyInterop.toast("DeckShare Error", "Screenshots failed to upload");
+          PyInterop.toast("DeckShare", "Error! Screenshots failed to upload");
         }
         PyInterop.log(JSON.stringify(uploadStatus));
       }
