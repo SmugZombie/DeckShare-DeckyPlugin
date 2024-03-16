@@ -298,22 +298,16 @@
   const ScreenshotLauncher = (props) => {
       const [isRunning] = React.useState(false);
       const [imageSrc, setImageSrc] = React.useState(null); // State to store Base64 data
+      const [imgBase64, setImgBase64] = React.useState("");
       // Function to load the image and convert it to Base64
       React.useEffect(() => {
           const fetchImageAndConvertToBase64 = async () => {
-              try {
-                  const response = await fetch(props.screenshot.path); // Fetch the image file
-                  const blob = await response.blob(); // Convert the response to a Blob
-                  const reader = new FileReader();
-                  reader.onload = () => {
-                      // Convert the image to Base64 and set the state
-                      setImageSrc(reader.result);
-                  };
-                  reader.readAsDataURL(blob); // Read the Blob as a data URL (Base64)
-              }
-              catch (error) {
-                  console.error('Error fetching or converting image:', error);
-              }
+              await PyInterop.getImage(props.screenshot.path).then(async (res) => {
+                  if (res.result) {
+                      await PyInterop.log("Base64:" + res.result);
+                      setImgBase64(res.result);
+                  }
+              });
           };
           if (props.screenshot.path) {
               fetchImageAndConvertToBase64();
@@ -327,7 +321,6 @@
           PyInterop.toast("DeckShare", "Manually sharing screenshot");
           await PyInterop.uploadScreenshot(props.screenshot.path);
       }
-      PyInterop.log(JSON.stringify(props.screenshot.path));
       return (window.SP_REACT.createElement(React.Fragment, null,
           window.SP_REACT.createElement("style", null, `
           .custom-buttons {
