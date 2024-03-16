@@ -2179,11 +2179,20 @@
               window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Screenshots" }, (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
                   screenshotsList.map((itm) => (window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))),
                   window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
-                      window.SP_REACT.createElement(deckyFrontendLib.ButtonItem, { layout: "below", onClick: reload }, "Reload"))))),
+                      window.SP_REACT.createElement(deckyFrontendLib.ButtonItem, { layout: "below", onClick: reload }, "Reload Screenshots"))))),
               window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Credits" },
-                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Test")),
+                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Created with \u2764\uFE0F by SmugZombie"),
+                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Visit: https://deckshare.zip"),
+                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
+                      "Version: ",
+                      version)),
               window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Stats For Nerds" },
-                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Test")))));
+                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
+                      "Screenshots Taken: ",
+                      screenshotsTaken),
+                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
+                      "Screenshots Shared: ",
+                      screenshotsShared)))));
   };
   var index = deckyFrontendLib.definePlugin((serverApi) => {
       PyInterop.setServer(serverApi);

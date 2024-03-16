@@ -200,7 +200,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
                 }
                 <PanelSectionRow>
                   <ButtonItem layout="below" onClick={reload} >
-                    Reload
+                    Reload Screenshots
                   </ButtonItem>
                 </PanelSectionRow>
               </>
@@ -208,10 +208,13 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
           }
         </PanelSection>
         <PanelSection title="Credits">
-          <PanelSectionRow>Test</PanelSectionRow>
+          <PanelSectionRow>Created with ❤️ by SmugZombie</PanelSectionRow>
+          <PanelSectionRow>Visit: https://deckshare.zip</PanelSectionRow>
+          <PanelSectionRow>Version: {version}</PanelSectionRow>
         </PanelSection>
         <PanelSection title="Stats For Nerds">
-          <PanelSectionRow>Test</PanelSectionRow>
+          <PanelSectionRow>Screenshots Taken: {screenshotsTaken}</PanelSectionRow>
+          <PanelSectionRow>Screenshots Shared: {screenshotsShared}</PanelSectionRow>
         </PanelSection>
       </div>
     </>
