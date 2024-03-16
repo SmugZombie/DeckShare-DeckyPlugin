@@ -294,6 +294,19 @@
    */
   const ScreenshotLauncher = (props) => {
       const [isRunning] = React.useState(false);
+      const [imageSrc, setImageSrc] = React.useState(null); // State to store Base64 data
+      // Function to load the image and convert it to Base64
+      React.useEffect(() => {
+          if (props.screenshot.path) {
+              // Load the image file
+              const reader = new FileReader();
+              reader.onload = () => {
+                  // Convert the image to Base64 and set the state
+                  setImageSrc(reader.result);
+              };
+              reader.readAsDataURL(props.screenshot.path);
+          }
+      }, [props.screenshot.path]); // Run only when screenshot path changes
       /**
        * Determines which action to run when the interactable is selected.
        * @param screenshot The screenshot associated with this screenshotLauncher.
@@ -302,7 +315,7 @@
           PyInterop.toast("DeckShare", "Manually sharing screenshot");
           await PyInterop.uploadScreenshot(props.screenshot.path);
       }
-      PyInterop.log(JSON.stringify(props));
+      PyInterop.log(JSON.stringify(props.screenshot.path));
       return (window.SP_REACT.createElement(React.Fragment, null,
           window.SP_REACT.createElement("style", null, `
           .custom-buttons {
@@ -324,8 +337,7 @@
                               display: "flex",
                               justifyContent: "center",
                               alignItems: "center"
-                          } },
-                          window.SP_REACT.createElement("img", { style: { maxWidth: 60, maxHeight: 32 }, src: props.screenshot.path })))))));
+                          } }, imageSrc && window.SP_REACT.createElement("img", { style: { maxWidth: 60, maxHeight: 32 }, src: imageSrc, alt: "Screenshot" })))))));
   };
 
   class ScreenshotsState {

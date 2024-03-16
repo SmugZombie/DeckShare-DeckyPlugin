@@ -60,6 +60,22 @@ const ScreenshotLabel: VFC<{ screenshot: Screenshot, isRunning: boolean}> = (pro
  */
 export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: ScreenshotLauncherProps) => {
   const [isRunning] = useState(false);
+  const [imageSrc, setImageSrc] = useState<string | null>(null); // State to store Base64 data
+
+
+  // Function to load the image and convert it to Base64
+  useEffect(() => {
+    if (props.screenshot.path) {
+      // Load the image file
+      const reader = new FileReader();
+      reader.onload = () => {
+        // Convert the image to Base64 and set the state
+        setImageSrc(reader.result as string);
+      };
+      reader.readAsDataURL(props.screenshot.path);
+    }
+  }, [props.screenshot.path]); // Run only when screenshot path changes
+
   /**
    * Determines which action to run when the interactable is selected.
    * @param screenshot The screenshot associated with this screenshotLauncher.
@@ -70,7 +86,7 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
 
   }
 
-  PyInterop.log(JSON.stringify(props))
+  PyInterop.log(JSON.stringify(props.screenshot.path))
 
   return (
     <>
@@ -97,10 +113,8 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
               justifyContent: "center",
               alignItems: "center"
             }}>
-              <img
-                style={{ maxWidth: 60, maxHeight: 32 }}
-                src={ props.screenshot.path }
-              />
+              {/* Render the image with the Base64 data */}
+              {imageSrc && <img style={{ maxWidth: 60, maxHeight: 32 }} src={imageSrc} alt="Screenshot" />}
             </DialogButton>
           </Focusable>
         </Field>
