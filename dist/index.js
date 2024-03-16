@@ -324,7 +324,7 @@
                               justifyContent: "center",
                               alignItems: "center"
                           } },
-                          window.SP_REACT.createElement("img", { style: { maxWidth: 60, maxHeight: 32 }, src: props.screenshot.screenshot.path })))))));
+                          window.SP_REACT.createElement("img", { style: { maxWidth: 60, maxHeight: 32 }, src: "/home/deck/.local/share/Steam/userdata/28357484/760/remote/7/screenshots/20240315230415_1.jpg" })))))));
   };
 
   class ScreenshotsState {

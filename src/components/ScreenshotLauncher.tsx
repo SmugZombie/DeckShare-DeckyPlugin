@@ -97,7 +97,7 @@ export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: Screensh
             }}>
               <img
                 style={{ maxWidth: 60, maxHeight: 32 }}
-                src={ props.screenshot.screenshot.path }
+                src={ "/home/deck/.local/share/Steam/userdata/28357484/760/remote/7/screenshots/20240315230415_1.jpg" }
               />
             </DialogButton>
           </Focusable>
