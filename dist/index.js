@@ -2061,7 +2061,7 @@
               if (res.result?.toLowerCase().includes("invalid")) {
                   setIsError(true);
                   setErrorMessage(res.result);
-                  setTimeout(() => { setIsError(false); setErrorMessage(""); }, 3000);
+                  setTimeout(() => { setIsError(false); setErrorMessage(""); setIsSaving(false); setIsSaved(false); }, 3000);
               }
               else {
                   if (res.result) {
@@ -2165,19 +2165,25 @@
         }
       `),
           window.SP_REACT.createElement("div", { className: "deckshare-scope" },
-              window.SP_REACT.createElement(deckyFrontendLib.PanelSection, null,
-                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, { title: "Settings" },
+              window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Settings" },
+                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
                       window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { label: "AutoShare", checked: autoUpload, onChange: (value) => toggleAutoUpload(value) }),
                       window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { label: "Notifications", checked: notifications, onChange: (value) => toggleNotifications(value) }),
                       window.SP_REACT.createElement(deckyFrontendLib.TextField, { value: webhookUrl, onChange: (e) => setWebhookUrl(e.target.value) }),
                       window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { label: "Save Webhook Url", checked: false, onChange: () => saveWebhookUrl(webhookUrl) }),
                       (isError) ? (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
                           "Error: ",
-                          errorMessage)) : ("")),
-                  (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
-                      screenshotsList.map((itm) => (window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))),
-                      window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
-                          window.SP_REACT.createElement(deckyFrontendLib.ButtonItem, { layout: "below", onClick: reload }, "Reload"))))))));
+                          errorMessage)) : (""),
+                      (isSaving) ? (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Validating webhook url.")) : (""),
+                      (isSaved) ? (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Saved Successfully")) : (""))),
+              window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Screenshots" }, (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
+                  screenshotsList.map((itm) => (window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))),
+                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
+                      window.SP_REACT.createElement(deckyFrontendLib.ButtonItem, { layout: "below", onClick: reload }, "Reload"))))),
+              window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Credits" },
+                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Test")),
+              window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Stats For Nerds" },
+                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Test")))));
   };
   var index = deckyFrontendLib.definePlugin((serverApi) => {
       PyInterop.setServer(serverApi);

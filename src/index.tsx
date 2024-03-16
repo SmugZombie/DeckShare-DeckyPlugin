@@ -59,7 +59,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
       if (res.result?.toLowerCase().includes("invalid")) {
         setIsError(true);
         setErrorMessage(res.result);
-        setTimeout(() => { setIsError(false); setErrorMessage(""); }, 3000);
+        setTimeout(() => { setIsError(false); setErrorMessage(""); setIsSaving(false); setIsSaved(false) }, 3000);
       }else{
         if(res.result){
           setIsError(false);
@@ -170,8 +170,8 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
         }
       `}</style>
       <div className="deckshare-scope">
-        <PanelSection>
-          <PanelSectionRow title="Settings">
+        <PanelSection title="Settings">
+          <PanelSectionRow>
             <ToggleField label="AutoShare" checked={autoUpload} onChange={(value) => toggleAutoUpload(value)} ></ToggleField>
             <ToggleField label="Notifications" checked={notifications} onChange={(value) => toggleNotifications(value)} ></ToggleField>
             <TextField value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)}></TextField>
@@ -179,7 +179,15 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
             {(isError) ? (
               <PanelSectionRow>Error: {errorMessage}</PanelSectionRow>
             ) : ("")}
+            {(isSaving) ? (
+              <PanelSectionRow>Validating webhook url.</PanelSectionRow>
+            ) : ("")}
+            {(isSaved) ? (
+              <PanelSectionRow>Saved Successfully</PanelSectionRow>
+            ) : ("")}
           </PanelSectionRow>
+        </PanelSection>
+        <PanelSection title="Screenshots">
           {
             (screenshotsList.length == 0) ? (
               <div style={{ textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" }}>No screenshots found</div>
@@ -198,6 +206,12 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
               </>
             )
           }
+        </PanelSection>
+        <PanelSection title="Credits">
+          <PanelSectionRow>Test</PanelSectionRow>
+        </PanelSection>
+        <PanelSection title="Stats For Nerds">
+          <PanelSectionRow>Test</PanelSectionRow>
         </PanelSection>
       </div>
     </>
