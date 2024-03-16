@@ -30,6 +30,6 @@ export class Screenshot {
    * @returns A new Screenshot.
    */
   static fromJSON(json: any): Screenshot {
-    return new Screenshot(json.id, json.name, json.cmd, json.position, json.isApp, json.passFlags, json.hooks);
+    return new Screenshot(json.id, json.name, json.path);
   }
 }
