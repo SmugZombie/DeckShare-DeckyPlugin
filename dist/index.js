@@ -2045,14 +2045,36 @@
       const [isError, setIsError] = React.useState(false);
       const [errorMessage, setErrorMessage] = React.useState("");
       const [isLoadingUrl, setIsLoadingUrl] = React.useState(false);
-      React.useState(false);
-      React.useState(false);
+      const [isSaving, setIsSaving] = React.useState(false);
+      const [isSaved, setIsSaved] = React.useState(false);
       const [version, setVersion] = React.useState("0.0.0");
       const [autoUpload, setAutoUpload] = React.useState(false);
       const [notifications, setNotifications] = React.useState(false);
       const [screenshotsTaken, setScreenshotsTaken] = React.useState(0);
       const [screenshotsShared, setScreenshotsShared] = React.useState(0);
       const tries = React.useRef(0);
+      async function saveWebhookUrl(webhookUrl) {
+          setIsLoadingUrl(true);
+          setIsSaving(true);
+          setIsSaved(false);
+          await PyInterop.setWebhookUrl(webhookUrl).then((res) => {
+              if (res.result?.toLowerCase().includes("invalid")) {
+                  setIsError(true);
+                  setErrorMessage(res.result);
+              }
+              else {
+                  if (res.result) {
+                      setIsError(false);
+                      setErrorMessage("");
+                      setWebhookUrl(res.result);
+                      setIsSaving(false);
+                      setIsSaved(true);
+                      setTimeout(() => { setIsSaved(false); }, 3000);
+                  }
+              }
+              setIsLoadingUrl(false);
+          });
+      }
       async function reload() {
           try {
               await PyInterop.getScreenshots().then((res) => {
@@ -2085,6 +2107,10 @@
       async function toggleAutoUpload(value) {
           await PyInterop.setSetting("autoupload", value);
           setAutoUpload(value);
+      }
+      async function toggleNotifications(value) {
+          await PyInterop.setSetting("notifications", value);
+          setNotifications(value);
       }
       async function loadSettings() {
           try {
@@ -2139,8 +2165,11 @@
       `),
           window.SP_REACT.createElement("div", { className: "deckshare-scope" },
               window.SP_REACT.createElement(deckyFrontendLib.PanelSection, null,
-                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
-                      window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { checked: autoUpload, onChange: (value) => toggleAutoUpload(value) }, "AutoShare")),
+                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, { title: "Settings" },
+                      window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { label: "AutoShare", checked: autoUpload, onChange: (value) => toggleAutoUpload(value) }),
+                      window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { label: "Notifications", checked: notifications, onChange: (value) => toggleNotifications(value) }),
+                      window.SP_REACT.createElement(deckyFrontendLib.TextField, { value: webhookUrl, onChange: (e) => setWebhookUrl(e.target.value) }),
+                      window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { label: "Save Url", checked: false, onChange: () => saveWebhookUrl(webhookUrl) })),
                   (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
                       screenshotsList.map((itm) => (window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))),
                       window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,

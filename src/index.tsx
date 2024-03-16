@@ -10,6 +10,7 @@ import {
   ServerResponse,
   SidebarNavigation,
   staticClasses,
+  TextField,
   ToggleField,
 } from "decky-frontend-lib";
 import { VFC, Fragment, useRef, useState } from "react";
@@ -169,10 +170,11 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
       `}</style>
       <div className="deckshare-scope">
         <PanelSection>
-          <PanelSectionRow>
-            <ToggleField checked={autoUpload} onChange={(value) => toggleAutoUpload(value)} >
-              AutoShare
-            </ToggleField>
+          <PanelSectionRow title="Settings">
+            <ToggleField label="AutoShare" checked={autoUpload} onChange={(value) => toggleAutoUpload(value)} ></ToggleField>
+            <ToggleField label="Notifications" checked={notifications} onChange={(value) => toggleNotifications(value)} ></ToggleField>
+            <TextField value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)}></TextField>
+            <ToggleField label="Save Url" checked={false} onChange={() => saveWebhookUrl(webhookUrl)} ></ToggleField>
           </PanelSectionRow>
           {
             (screenshotsList.length == 0) ? (
