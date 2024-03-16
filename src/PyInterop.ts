@@ -28,7 +28,7 @@ export class PyInterop {
    * Logs a message to bash screenshot's log file and the frontend console.
    * @param message The message to log.
    */
-  static async log(message: String): Promise<void> {
+  static async log(message: any): Promise<void> {
     console.log(message);
     await this.serverAPI.callPluginMethod<{ message: String }, boolean>("logMessage", { message: `[front-end]: ${message}` });
   }

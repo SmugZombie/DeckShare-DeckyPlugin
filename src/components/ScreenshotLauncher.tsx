@@ -59,66 +59,15 @@ const ScreenshotLabel: VFC<{ screenshot: Screenshot, isRunning: boolean}> = (pro
  * @returns The ScreenshotLauncher component.
  */
 export const ScreenshotLauncher: VFC<ScreenshotLauncherProps> = (props: ScreenshotLauncherProps) => {
-  const { runningScreenshots, setIsRunning } = useScreenshotsState();
-  const [ isRunning, _setIsRunning ] = useState<boolean>(PluginController.checkIfRunning(props.screenshot.id));
-
-  useEffect(() => {
-    if (PluginController.checkIfRunning(props.screenshot.id) && !runningScreenshots.has(props.screenshot.id)) {
-      setIsRunning(props.screenshot.id, true);
-    }
-  }, []);
-
-  useEffect(() => {
-    _setIsRunning(runningScreenshots.has(props.screenshot.id));
-  }, [runningScreenshots]);
-
+  const [isRunning] = useState(false);
   /**
    * Determines which action to run when the interactable is selected.
    * @param screenshot The screenshot associated with this screenshotLauncher.
    */
   async function onAction(screenshot:Screenshot): Promise<void> {
-    if (isRunning) {
-      const res = await PluginController.closeScreenshot(screenshot);
-      if (!res) {
-        PyInterop.toast("Error", "Failed to close screenshot.");
-      } else {
-        setIsRunning(screenshot.id, false);
-      }
-    } else {
-      const res = await PluginController.launchScreenshot(screenshot, async () => {
-        if (PluginController.checkIfRunning(screenshot.id) && screenshot.isApp) {
-          setIsRunning(screenshot.id, false);
-          const killRes = await PluginController.killScreenshot(screenshot);
-          if (killRes) {
-            Navigation.Navigate("/library/home");
-            Navigation.CloseSideMenus();
-          } else {
-            PyInterop.toast("Error", "Failed to kill screenshot.");
-          }
-        }
-      });
-      if (!res) {
-        PyInterop.toast("Error", "Screenshot failed. Check the command.");
-      } else {
-        if (!screenshot.isApp) {
-          PyInterop.log(`Registering for WebSocket messages of type: ${screenshot.id}...`);
+    PyInterop.toast("DeckShare", "Manually sharing screenshot")
+    await PyInterop.uploadScreenshot(screenshot.path)
 
-          PluginController.onWebSocketEvent(screenshot.id, (data: any) => {
-            if (data.type == "end") {
-              if (data.status == 0) {
-                PyInterop.toast(screenshot.name, "Screenshot execution finished.");
-              } else {
-                PyInterop.toast(screenshot.name, "Screenshot execution was canceled.");
-              }
-
-              setIsRunning(screenshot.id, false);
-            }
-          });
-        }
-        
-        setIsRunning(screenshot.id, true);
-      }
-    }
   }
 
   return (
