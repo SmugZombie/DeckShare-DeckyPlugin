@@ -157,6 +157,9 @@
       static async getImage(key) {
           return (await this.serverAPI.callPluginMethod("getImage", { filepath: key })).result;
       }
+      static async isOnline() {
+          return (await this.serverAPI.callPluginMethod("isOnline", {})).result;
+      }
       /**
        * Sets the value of a plugin's setting.
        * @param key The key of the setting to set.
@@ -1918,6 +1921,7 @@
       const [notifications, setNotifications] = React.useState(false);
       const [screenshotsTaken, setScreenshotsTaken] = React.useState(0);
       const [screenshotsShared, setScreenshotsShared] = React.useState(0);
+      const [isOnline, setIsOnline] = React.useState(false);
       const tries = React.useRef(0);
       async function saveWebhookUrl(webhookUrl) {
           setIsLoadingUrl(true);
@@ -1979,6 +1983,10 @@
           await PyInterop.setSetting("notifications", value);
           setNotifications(value);
       }
+      async function checkOnlineStatus() {
+          setIsOnline(await PyInterop.isOnline());
+          setTimeout(async () => { await checkOnlineStatus(); }, 150000);
+      }
       async function loadSettings() {
           try {
               const version = await PyInterop.getSetting("version", "0.0.0");
@@ -1999,6 +2007,7 @@
       }
       if (version == "0.0.0") {
           loadSettings();
+          checkOnlineStatus();
       }
       loadWebhookUrl(false);
       if (Object.values(screenshots).length === 0 && tries.current < 10) {
@@ -2058,7 +2067,12 @@
                       screenshotsTaken),
                   window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
                       "Screenshots Shared: ",
-                      screenshotsShared)))));
+                      screenshotsShared),
+                  "(isOnline) ? (",
+                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Currently Online"),
+                  ") : (",
+                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Currently Offline"),
+                  ")"))));
   };
   var index = deckyFrontendLib.definePlugin((serverApi) => {
       PyInterop.setServer(serverApi);

@@ -8,6 +8,7 @@ import vdf
 import http.client
 import mimetypes
 import base64
+import socket
 from py_backend.instanceManager import InstanceManager
 from py_backend.jsInterop import JsInteropManager
 from settings import SettingsManager
@@ -202,6 +203,15 @@ class Plugin:
         self.guides[guideName] = "".join(guideFile.readlines())
 
     pass
+
+  def isOnline():
+    try:
+        # Attempt to create a socket connection to a known server
+        socket.create_connection(("8.8.8.8", 53), timeout=3)
+        return True
+    except OSError:
+        pass
+    return False
 
   async def getGuides(self):
     self._getGuides(self)
