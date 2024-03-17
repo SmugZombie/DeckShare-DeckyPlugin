@@ -204,13 +204,15 @@ class Plugin:
 
     pass
 
-  def isOnline():
+  def isOnline(self):
     try:
         # Attempt to create a socket connection to a known server
         socket.create_connection(("8.8.8.8", 53), timeout=3)
+        self.settingsManager.setSetting("online", True)
         return True
     except OSError:
         pass
+    self.settingsManager.setSetting("online", False)
     return False
 
   async def getGuides(self):

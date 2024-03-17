@@ -2068,11 +2068,7 @@
                   window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
                       "Screenshots Shared: ",
                       screenshotsShared),
-                  "(isOnline) ? (",
-                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Currently Online"),
-                  ") : (",
-                  window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Currently Offline"),
-                  ")"))));
+                  (isOnline) ? (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Currently Online")) : (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Currently Offline"))))));
   };
   var index = deckyFrontendLib.definePlugin((serverApi) => {
       PyInterop.setServer(serverApi);

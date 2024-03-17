@@ -222,11 +222,11 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
         <PanelSection title="Stats For Nerds">
           <PanelSectionRow>Screenshots Taken: {screenshotsTaken}</PanelSectionRow>
           <PanelSectionRow>Screenshots Shared: {screenshotsShared}</PanelSectionRow>
-          (isOnline) ? (
+          {(isOnline) ? (
             <PanelSectionRow>Currently Online</PanelSectionRow>
           ) : (
             <PanelSectionRow>Currently Offline</PanelSectionRow>
-          )
+          )}
         </PanelSection>
       </div>
     </>
