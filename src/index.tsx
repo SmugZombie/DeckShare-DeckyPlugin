@@ -49,6 +49,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
   const [ notifications, setNotifications ] = useState(false);
   const [ screenshotsTaken, setScreenshotsTaken ] = useState(0);
   const [ screenshotsShared, setScreenshotsShared ] = useState(0);
+  const [ settingsCollapsed, setSettingsCollapsed ] = useState(true);
   const tries = useRef(0);
 
   async function saveWebhookUrl(webhookUrl:string) {
@@ -170,7 +171,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
         }
       `}</style>
       <div className="deckshare-scope">
-        <PanelSection title="Settings">
+        <PanelSection title={(settingsCollapsed) ? (`Settings - ${<ButtonItem layout="below" onClick={setSettingsCollapsed(false)} >Show</ButtonItem>}`) : (`Settings - ${<ButtonItem layout="below" onClick={setSettingsCollapsed(true)} >Hide</ButtonItem>}`)}>
           <PanelSectionRow>
             <ToggleField label="AutoShare" checked={autoUpload} onChange={(value) => toggleAutoUpload(value)} ></ToggleField>
             <ToggleField label="Notifications" checked={notifications} onChange={(value) => toggleNotifications(value)} ></ToggleField>

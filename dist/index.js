@@ -1917,6 +1917,7 @@
       const [notifications, setNotifications] = React.useState(false);
       const [screenshotsTaken, setScreenshotsTaken] = React.useState(0);
       const [screenshotsShared, setScreenshotsShared] = React.useState(0);
+      const [settingsCollapsed, setSettingsCollapsed] = React.useState(true);
       const tries = React.useRef(0);
       async function saveWebhookUrl(webhookUrl) {
           setIsLoadingUrl(true);
@@ -2030,7 +2031,7 @@
         }
       `),
           window.SP_REACT.createElement("div", { className: "deckshare-scope" },
-              window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Settings" },
+              window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: (settingsCollapsed) ? (`Settings - ${window.SP_REACT.createElement(deckyFrontendLib.ButtonItem, { layout: "below", onClick: setSettingsCollapsed(false) }, "Show")}`) : (`Settings - ${window.SP_REACT.createElement(deckyFrontendLib.ButtonItem, { layout: "below", onClick: setSettingsCollapsed(true) }, "Hide")}`) },
                   window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
                       window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { label: "AutoShare", checked: autoUpload, onChange: (value) => toggleAutoUpload(value) }),
                       window.SP_REACT.createElement(deckyFrontendLib.ToggleField, { label: "Notifications", checked: notifications, onChange: (value) => toggleNotifications(value) }),
