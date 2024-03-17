@@ -87,6 +87,11 @@ export class PyInterop {
     return (await this.serverAPI.callPluginMethod<{ key: string, defaultVal: T }, T>("getSetting", { key: key, defaultVal: defaultVal })).result as T;
   }
 
+  
+  static async getImage<T>(key: string): Promise<T> {
+    return (await this.serverAPI.callPluginMethod<{ filepath: string }, T>("getImage", { filepath: key })).result as T;
+  }
+
   /**
    * Sets the value of a plugin's setting.
    * @param key The key of the setting to set.
@@ -179,8 +184,8 @@ export class PyInterop {
    * @param newVal The new value for the setting.
    * @returns A void promise resolving once the setting is set.
    */
-  static async uploadScreenshot<T>(key: string): Promise<ServerResponse<void>> {
-    return await this.serverAPI.callPluginMethod<{ key: string, newVal : T}, void>("uploadScreenshot", { filepath: key });
+  static async uploadScreenshot(key: string): Promise<ServerResponse<void>> {
+    return await this.serverAPI.callPluginMethod<{ filepath: string }, void>("uploadScreenshot", { filepath: key });
   }
 
   /**

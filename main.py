@@ -8,6 +8,7 @@ import vdf
 import http.client
 import mimetypes
 import base64
+import socket
 from py_backend.instanceManager import InstanceManager
 from py_backend.jsInterop import JsInteropManager
 from settings import SettingsManager
@@ -23,7 +24,7 @@ class Plugin:
   guidesDirPath = f"/home/{pluginUser}/homebrew/plugins/deckshare-plugin/guides"
   settingsManager = SettingsManager(name='DeckShare', settings_directory=pluginSettingsDir)
   steamdir = "/home/deck/.local/share/Steam/"
-  version = "0.1.1beta"
+  version = "0.1.2beta"
   discordWebhookURLBase = "https://discord.com/api/webhooks/"
 
   # Validates the Webhook URL by sending a GET request to the URL and checking the status code of the response
@@ -53,7 +54,7 @@ class Plugin:
         log(f"Successfully validated Webhook URL")
         return True
       else:
-        log(f"Failed to validate Webhook URL")
+        log(f"Failed to validate Webhook URL {webhookUrl} {response.status}")
       return False
     except Exception as e:
       log(f"An error occurred: {e}")
@@ -203,6 +204,17 @@ class Plugin:
 
     pass
 
+  def isOnline(self):
+    try:
+        # Attempt to create a socket connection to a known server
+        socket.create_connection(("8.8.8.8", 53), timeout=3)
+        self.settingsManager.setSetting("online", True)
+        return True
+    except OSError:
+        pass
+    self.settingsManager.setSetting("online", False)
+    return False
+
   async def getGuides(self):
     self._getGuides(self)
     return self.guides
@@ -300,10 +312,10 @@ async def upload_file(filename, webhook_url):
 
       # Check the status code of the response for success or failure
       if response.status == 200:
-        print(f"Successfully uploaded {filename} to Discord")
+        log(f"Successfully uploaded {filename} to Discord")
         return response.status
       else:
-        print(f"Failed to upload {filename} to Discord")
+        log(f"Failed to upload {filename} to Discord")
         return False
     except Exception as e:
       log(f"An error occurred: {e}")
