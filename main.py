@@ -53,7 +53,7 @@ class Plugin:
         log(f"Successfully validated Webhook URL")
         return True
       else:
-        log(f"Failed to validate Webhook URL")
+        log(f"Failed to validate Webhook URL {webhookUrl} {response.status}")
       return False
     except Exception as e:
       log(f"An error occurred: {e}")
