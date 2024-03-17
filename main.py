@@ -300,10 +300,10 @@ async def upload_file(filename, webhook_url):
 
       # Check the status code of the response for success or failure
       if response.status == 200:
-        print(f"Successfully uploaded {filename} to Discord")
+        log(f"Successfully uploaded {filename} to Discord")
         return response.status
       else:
-        print(f"Failed to upload {filename} to Discord")
+        log(f"Failed to upload {filename} to Discord")
         return False
     except Exception as e:
       log(f"An error occurred: {e}")
