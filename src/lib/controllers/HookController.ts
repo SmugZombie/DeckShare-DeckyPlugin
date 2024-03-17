@@ -66,7 +66,7 @@ export class HookController {
    */
   init(screenshots: ScreenshotsDictionary): void {
     this.liten();
-    PyInterop.log(JSON.stringify(screenshots))
+    //PyInterop.log(JSON.stringify(screenshots))
     for (const screenshot of Object.values(screenshots)) {
       //PyInterop.log(JSON.stringify(screenshot))
       this.updateHooks(screenshot);

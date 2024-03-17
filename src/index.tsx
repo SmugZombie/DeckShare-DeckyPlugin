@@ -1,6 +1,7 @@
 import {
   ButtonItem,
   definePlugin,
+  Focusable,
   gamepadDialogClasses,
   Navigation,
   PanelSection,
@@ -49,6 +50,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
   const [ notifications, setNotifications ] = useState(false);
   const [ screenshotsTaken, setScreenshotsTaken ] = useState(0);
   const [ screenshotsShared, setScreenshotsShared ] = useState(0);
+  const [ isOnline, setIsOnline ] = useState(false);
   const tries = useRef(0);
 
   async function saveWebhookUrl(webhookUrl:string) {
@@ -114,6 +116,11 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
     setNotifications(value);
   }
 
+  async function checkOnlineStatus(){
+    setIsOnline(await PyInterop.isOnline());
+    setTimeout(async () => { await checkOnlineStatus(); }, 150000);
+  }
+
   async function loadSettings() {
     try{
       const version = await PyInterop.getSetting("version", "0.0.0");
@@ -134,6 +141,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
 
   if(version == "0.0.0"){
     loadSettings();
+    checkOnlineStatus();
   }
 
   loadWebhookUrl(false);
@@ -215,6 +223,14 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
         <PanelSection title="Stats For Nerds">
           <PanelSectionRow>Screenshots Taken: {screenshotsTaken}</PanelSectionRow>
           <PanelSectionRow>Screenshots Shared: {screenshotsShared}</PanelSectionRow>
+          {(isOnline) ? (
+            <PanelSectionRow>Currently Online</PanelSectionRow>
+          ) : (
+            <PanelSectionRow>Currently Offline</PanelSectionRow>
+          )}
+          <Focusable>
+            <PanelSectionRow></PanelSectionRow>
+          </Focusable>
         </PanelSection>
       </div>
     </>
