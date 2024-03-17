@@ -1,1 +1,113 @@
-Hello World
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeckShare - Share Your Steam Deck Moments</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>DeckShare</h1>
+    <p>Share Your Steam Deck Moments with Ease</p>
+  </header>
+
+  <div class="container">
+    <section id="project-info">
+      <h2>About DeckShare</h2>
+      <p>DeckShare is a simple DeckyLoader plugin that monitors SteamOS for new screenshots using a hook and automatically posts them to Discord via the provided webhook. (You must get your own Discord webhook url and provide it to the plugin upon first time setup)</p>
+    </section>
+
+    <section id="repository-info">
+      <h2>Repository Details</h2>
+      <ul>
+        <li>GitHub Repository: <a target='_blank' href="https://github.com/SmugZombie/DeckShare-DeckyPlugin">DeckShare-DeckyPlugin</a></li>
+        <li>License: <a target='_blank' href="https://github.com/SmugZombie/DeckShare-DeckyPlugin/blob/main/LICENSE">BSD 3-Clause License</a></li>
+        <li>Latest Release: <a target='_blank' href="https://github.com/SmugZombie/DeckShare-DeckyPlugin/releases">Here</a></li>
+      </ul>
+    </section>
+
+    <section id="discord">
+        <h2>Support / General Questions / Development Assistance</h2>
+        <p>Add DeckShare (user) on Discord. To add us on Discord, click the button below:</p>
+        <center><button onclick="window.open('https://discord.com/users/deckshare')">Add on Discord</button></center>
+      </section>
+
+      <section id="thanks">
+        <h2>Thanks</h2>
+        <p>To buy us a beer/coffee/steamgame/<u>development steamdeck</u>.. click the button below:</p>
+        <center><button onclick="window.open('https://paypal.me/regli')">Contribute</button></center>
+      </section>
+  </div>
+
+  <footer>
+    <p>&copy; 2024 DeckShare. Developed for the Steam Deck by Valve community.</p>
+    <p>with ❤️ by <a href='https://github.com/smugzombie'>SmugZombie</a></p>
+    <br \>
+    <br \>
+    <br \>
+    Checkout my other current project: <a target='_blank' href=''>Vnsh.link - Ephemeral Data Sharing</a>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+<style>
+    body {
+  font-family: Arial, sans-serif;
+  background-color: #1f1f1f; /* Dark background */
+  color: #e0e0e0; /* Light text */
+  margin: 0;
+  padding: 0;
+}
+
+header, footer {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1, h2 {
+  color: #ff4500; /* Valve Orange */
+}
+
+a {
+  color: #00a8e8; /* Steam Blue */
+}
+
+form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 10px;
+}
+
+input[type="text"],
+input[type="email"],
+textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #333;
+  color: #fff;
+}
+
+button {
+  padding: 10px;
+  background-color: #00a8e8;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0077b5; /* Darker Steam Blue on hover */
+}
+
+</style>
+</html>
