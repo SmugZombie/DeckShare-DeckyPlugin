@@ -1,6 +1,7 @@
 import {
   ButtonItem,
   definePlugin,
+  Focusable,
   gamepadDialogClasses,
   Navigation,
   PanelSection,
@@ -227,6 +228,9 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
           ) : (
             <PanelSectionRow>Currently Offline</PanelSectionRow>
           )}
+          <Focusable>
+            <PanelSectionRow></PanelSectionRow>
+          </Focusable>
         </PanelSection>
       </div>
     </>
