@@ -303,6 +303,7 @@
        */
       async function onAction() {
           PyInterop.toast("DeckShare", "Manually sharing screenshot");
+          await PyInterop.setSetting("screenshotsShared", (await PyInterop.getSetting("screenshotsShared", 0) + 1));
           await PyInterop.uploadScreenshot(props.screenshot.path);
       }
       return (window.SP_REACT.createElement(React.Fragment, null,
