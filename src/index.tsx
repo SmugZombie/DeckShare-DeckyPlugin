@@ -3,32 +3,21 @@ import {
   definePlugin,
   Focusable,
   gamepadDialogClasses,
-  Navigation,
   PanelSection,
   PanelSectionRow,
   quickAccessControlsClasses,
   ServerAPI,
-  ServerResponse,
-  SidebarNavigation,
   staticClasses,
   TextField,
   ToggleField,
 } from "decky-frontend-lib";
 import { VFC, Fragment, useRef, useState } from "react";
-import { IoApps, IoSettingsSharp } from "react-icons/io5";
-import { HiViewGridAdd } from "react-icons/hi";
-import { FaEdit } from "react-icons/fa";
-import { MdNumbers } from "react-icons/md";
-import { AddScreenshot } from "./components/plugin-config-ui/AddScreenshot";
+import { IoApps } from "react-icons/io5";
 import { ScreenshotLauncher } from "./components/ScreenshotLauncher";
-import { ManageScreenshots } from "./components/plugin-config-ui/ManageScreenshots";
-
 import { PyInterop } from "./PyInterop";
 import { Screenshot } from "./lib/data-structures/Screenshot";
 import { ScreenshotsContextProvider, ScreenshotsState, useScreenshotsState } from "./state/ScreenshotsState";
 import { PluginController } from "./lib/controllers/PluginController";
-import { Settings } from "./components/plugin-config-ui/Settings";
-import { GuidePage } from "./components/plugin-config-ui/guides/GuidePage";
 
 declare global {
   var SteamClient: SteamClient;
