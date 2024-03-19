@@ -22,10 +22,12 @@ Upon installation and first load of the plugin you should see a Toast notificati
 
 3. Provide your [Discord webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) url and click Save. You can now choose to automatically share new screenshots, disable/enable notifications of when screenshots are shared, and view your screenshot statistics.
 4. 
-   ![image](https://github.com/SmugZombie/DeckShare-DeckyPlugin/assets/11764327/d975e73b-4eec-4789-9d90-2347d6bc3f33)
+   ![image](https://github.com/SmugZombie/DeckShare-DeckyPlugin/assets/11764327/2ad0d7f3-7eed-4952-81b9-3c4919a06ad0)
 
-   ![image](https://github.com/SmugZombie/DeckShare-DeckyPlugin/assets/11764327/170fdba9-6fd4-4a81-93cc-2191e8a49d51)
+   ![image](https://github.com/SmugZombie/DeckShare-DeckyPlugin/assets/11764327/3d9afd78-effa-47ba-bf43-aee7553f15cb)
 
+
+New additions are detection of Offline mode. The script will now queue uploads until it detects that you are back online and will give you the opportunity to process them or will run the next time you take a new screenshot.
 
 The plugin should now be setup providing it was given a valid webhook url. At this point any future screenshots should automatically be uploaded and you will receive a confirmation toast notification.
 
@@ -35,7 +37,7 @@ Additionally you can see a list of the latest 5 screenshots in order from newest
 
 # Future
 1. Add additional endpoints (Imgur? Another folder on the device for use with a cloud service sync?)
-
+2. ???
 
 # Give Thanks
 
