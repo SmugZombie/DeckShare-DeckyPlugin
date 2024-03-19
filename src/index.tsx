@@ -3,32 +3,21 @@ import {
   definePlugin,
   Focusable,
   gamepadDialogClasses,
-  Navigation,
   PanelSection,
   PanelSectionRow,
   quickAccessControlsClasses,
   ServerAPI,
-  ServerResponse,
-  SidebarNavigation,
   staticClasses,
   TextField,
   ToggleField,
 } from "decky-frontend-lib";
 import { VFC, Fragment, useRef, useState } from "react";
-import { IoApps, IoSettingsSharp } from "react-icons/io5";
-import { HiViewGridAdd } from "react-icons/hi";
-import { FaEdit } from "react-icons/fa";
-import { MdNumbers } from "react-icons/md";
-import { AddScreenshot } from "./components/plugin-config-ui/AddScreenshot";
+import { IoApps } from "react-icons/io5";
 import { ScreenshotLauncher } from "./components/ScreenshotLauncher";
-import { ManageScreenshots } from "./components/plugin-config-ui/ManageScreenshots";
-
 import { PyInterop } from "./PyInterop";
 import { Screenshot } from "./lib/data-structures/Screenshot";
-import { ScreenshotsContextProvider, ScreenshotsState, useScreenshotsState } from "./state/ScreenshotsState";
+import { ScreenshotsContextProvider, ScreenshotsState, useScreenshotsState, useUploadQueueState } from "./state/ScreenshotsState";
 import { PluginController } from "./lib/controllers/PluginController";
-import { Settings } from "./components/plugin-config-ui/Settings";
-import { GuidePage } from "./components/plugin-config-ui/guides/GuidePage";
 
 declare global {
   var SteamClient: SteamClient;
@@ -39,6 +28,7 @@ declare global {
 
 const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
   const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
+  const [ uploadQueue, setUploadQueue ] = useState({});
   const [ webhookUrl, setWebhookUrl ] = useState("");
   const [ isError, setIsError ] = useState(false);
   const [ errorMessage, setErrorMessage ] = useState("");
@@ -76,10 +66,25 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
     });
   }
 
+  async function processQueue(): Promise<void> {
+    try{
+      await PyInterop.processQueue().then(() => {});
+      await PyInterop.getUploadQueue().then((res) => {
+        setUploadQueue(res.result as ScreenshotsDictionary);
+      });
+    }catch(e:string){
+      PyInterop.log("Error in processQueue: " + e);
+      PyInterop.toast("DeckShare Error", e.toString());
+    }
+  }
+
   async function reload(): Promise<void> {
     try{
       await PyInterop.getScreenshots().then((res) => {
         setScreenshots(res.result as ScreenshotsDictionary);
+      });
+      await PyInterop.getUploadQueue().then((res) => {
+        setUploadQueue(res.result as ScreenshotsDictionary);
       });
     }catch(e){  
       PyInterop.log("Error in reload: " + e);
@@ -117,7 +122,11 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
   }
 
   async function checkOnlineStatus(){
-    setIsOnline(await PyInterop.isOnline());
+    let isOnline = await PyInterop.isOnline();
+    setIsOnline(isOnline);
+    if(isOnline){
+      await processQueue();
+    }
     setTimeout(async () => { await checkOnlineStatus(); }, 150000);
   }
 
@@ -194,6 +203,15 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
               <PanelSectionRow>Saved Successfully</PanelSectionRow>
             ) : ("")}
           </PanelSectionRow>
+        </PanelSection>
+        <PanelSection title={`Pending Uploads: ${Object.keys(uploadQueue).length}`}>
+          
+        {(Object.keys(uploadQueue).length) ? (
+          <ButtonItem layout="below" onClick={processQueue} >
+            Process Queue
+          </ButtonItem>
+        ) : null}
+
         </PanelSection>
         <PanelSection title="Recent Screenshots">
           {

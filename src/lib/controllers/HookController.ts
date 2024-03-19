@@ -150,6 +150,10 @@ export class HookController {
         if(notifications){
           PyInterop.toast("Deckshare","Screenshots shared successfully");
         }
+      }else if(uploadStatus.result == "307"){
+        if(notifications){
+          PyInterop.toast("Deckshare","You're currently offline, but we've queue this upload for when you reconnect.");
+        }
       }else{
         if(notifications){
           PyInterop.toast("DeckShare", "Error! Screenshots failed to upload");
