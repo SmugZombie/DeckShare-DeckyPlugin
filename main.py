@@ -210,9 +210,9 @@ class Plugin:
 
   async def queueUploads(self, filepath, filename):
     try:
-      queue = await self.settingsManager.getSetting(self, "uploadQueue", [])
+      queue = await self.settingsManager.getSetting("uploadQueue", [])
       queue[filename] = {'path': filepath, 'name': filename, 'id': filename}
-      await self.settingsManager.setSetting(self, "uploadQueue", queue)
+      await self.settingsManager.setSetting("uploadQueue", queue)
       return 307
     except Exception as e:
       log(f"queueUploads - Error: {e}")
@@ -225,7 +225,7 @@ class Plugin:
         log("processQueue - Online Check Failed")
         return False
       # Fetch the current queue
-      queue = await SettingsManager.getSetting(self, "uploadQueue", [])
+      queue = await self.settingsManager.getSetting("uploadQueue", [])
       # Check if the queue is empty, if so no need to continue
       if(queue.length == 0):
         log("Queue is empty")
