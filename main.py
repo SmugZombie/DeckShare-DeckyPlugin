@@ -178,11 +178,10 @@ class Plugin:
       if await self.isOnline(self) == False:
         log("uploadScreenshot - Online Check Failed - Sending to queue")
         status = await self.queueUploads(self, filepath, getFilenameFromFilepath(filepath))
-        return status
       else:
         status = await upload_file(filepath, self.discordWebhookURL)
         log(status)
-        return status
+      return status
     except Exception as e:
       log(f"An error occurred: {e}")
     return False
@@ -203,7 +202,7 @@ class Plugin:
       else:
         status = await upload_file(newestScreenshot, self.discordWebhookURL)
         log(f"upload_file response: {status}")
-        return status
+      return status
     except Exception as e:
       log(f"An error occurred: {e}")
     return False
