@@ -24,7 +24,7 @@ class Plugin:
   guidesDirPath = f"/home/{pluginUser}/homebrew/plugins/deckshare-plugin/guides"
   settingsManager = SettingsManager(name='DeckShare', settings_directory=pluginSettingsDir)
   steamdir = "/home/deck/.local/share/Steam/"
-  version = "0.1.2beta"
+  version = "0.1.3beta"
   discordWebhookURLBase = "https://discord.com/api/webhooks/"
 
   # Validates the Webhook URL by sending a GET request to the URL and checking the status code of the response
@@ -175,7 +175,7 @@ class Plugin:
         log("No Valid Webhook URL Found")
         return False
       # Check to ensure we are online, if not send the file to the queue
-      if self.isOnline(self) == False:
+      if await self.isOnline(self) == False:
         log("uploadScreenshot - Online Check Failed - Sending to queue")
         status = await self.queueUploads(self, filepath, getFilenameFromFilepath(filepath))
         return status
@@ -197,7 +197,7 @@ class Plugin:
       log("Newest Screenshot" + newestScreenshot)
 
       # Check to ensure we are online
-      if self.isOnline(self) == False:
+      if await self.isOnline(self) == False:
         log("uploadScreenshots - Online Check Failed - Sending to queue")
         status = await self.queueUploads(self, newestScreenshot, getFilenameFromFilepath(newestScreenshot))
       else:
@@ -220,7 +220,7 @@ class Plugin:
   async def processQueue(self):
     try:
       # Check to ensure we are online
-      if self.isOnline(self) == False:
+      if await self.isOnline(self) == False:
         log("processQueue - Online Check Failed")
         return False
       # Fetch the current queue
@@ -248,14 +248,14 @@ class Plugin:
 
     pass
 
-  def isOnline(self):
+  async def isOnline(self):
     try:
-        # Attempt to create a socket connection to a known server
-        socket.create_connection(("8.8.8.8", 53), timeout=3)
-        self.settingsManager.setSetting("online", True)
-        return True
+      # Attempt to create a socket connection to a known server
+      socket.create_connection(("8.8.8.8", 53), timeout=3)
+      self.settingsManager.setSetting("online", True)
+      return True
     except OSError:
-        pass
+      pass
     self.settingsManager.setSetting("online", False)
     return False
 
