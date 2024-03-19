@@ -28,7 +28,7 @@ declare global {
 
 const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
   const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
-  const { uploadQueue, setUploadQueue } = useState({});
+  const [ uploadQueue, setUploadQueue ] = useState({});
   const [ webhookUrl, setWebhookUrl ] = useState("");
   const [ isError, setIsError ] = useState(false);
   const [ errorMessage, setErrorMessage ] = useState("");

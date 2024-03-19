@@ -1915,7 +1915,7 @@
 
   const Content = ({}) => {
       const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
-      const { uploadQueue, setUploadQueue } = React.useState({});
+      const [uploadQueue, setUploadQueue] = React.useState({});
       const [webhookUrl, setWebhookUrl] = React.useState("");
       const [isError, setIsError] = React.useState(false);
       const [errorMessage, setErrorMessage] = React.useState("");
