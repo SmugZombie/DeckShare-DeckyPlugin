@@ -248,7 +248,7 @@ class Plugin:
         log("Queue is empty")
         return False
       # Log the length of the queue
-      log("Offline Queue Length: " + queue.length)
+      log(f"Offline Queue Length: {len(queue)}")
       # Loop through the queue and upload each file
       for file in queue:
           status = await upload_file(file['path'], self.discordWebhookURL)
