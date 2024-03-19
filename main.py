@@ -24,7 +24,7 @@ class Plugin:
   guidesDirPath = f"/home/{pluginUser}/homebrew/plugins/deckshare-plugin/guides"
   settingsManager = SettingsManager(name='DeckShare', settings_directory=pluginSettingsDir)
   steamdir = "/home/deck/.local/share/Steam/"
-  version = "0.1.4beta"
+  version = "0.1.5beta"
   discordWebhookURLBase = "https://discord.com/api/webhooks/"
 
   # Validates the Webhook URL by sending a GET request to the URL and checking the status code of the response
@@ -172,7 +172,8 @@ class Plugin:
     try:
       # Validate that we have a valid webhook, otherwise break
       if(self.discordWebhookURL == "" or self.discordWebhookURL == False):
-        log("No Valid Webhook URL Found")
+        log("No Valid Webhook URL Found - Sending to queue")
+        await self.queueUploads(self, filepath, getFilenameFromFilepath(filepath))
         return False
       # Check to ensure we are online, if not send the file to the queue
       if await self.isOnline(self) == False:
@@ -188,13 +189,14 @@ class Plugin:
 
   async def uploadScreenshots(self):
     try:
-      # Validate that we have a valid webhook, otherwise break
-      if(self.discordWebhookURL == "" or self.discordWebhookURL == False):
-        log("No Valid Webhook URL Found")
-        return False
       newestScreenshot = get_newest_jpg(self)
       log("Newest Screenshot" + newestScreenshot)
-
+      # Validate that we have a valid webhook, otherwise break
+      if(self.discordWebhookURL == "" or self.discordWebhookURL == False):
+        log("No Valid Webhook URL Found - Sending to queue")
+        await self.queueUploads(self, newestScreenshot, getFilenameFromFilepath(newestScreenshot))
+        return False
+      
       # Check to ensure we are online
       if await self.isOnline(self) == False:
         log("uploadScreenshots - Online Check Failed - Sending to queue")
