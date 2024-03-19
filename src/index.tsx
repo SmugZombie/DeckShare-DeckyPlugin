@@ -122,7 +122,11 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
   }
 
   async function checkOnlineStatus(){
-    setIsOnline(await PyInterop.isOnline());
+    let isOnline = await PyInterop.isOnline();
+    setIsOnline(isOnline);
+    if(isOnline){
+      await processQueue();
+    }
     setTimeout(async () => { await checkOnlineStatus(); }, 150000);
   }
 
