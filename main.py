@@ -271,6 +271,7 @@ class Plugin:
       # Attempt to create a socket connection to a known server
       socket.create_connection(("8.8.8.8", 53), timeout=3)
       self.settingsManager.setSetting("online", True)
+      await self.processQueue(self)
       return True
     except OSError:
       pass
