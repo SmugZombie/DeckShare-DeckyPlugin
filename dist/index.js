@@ -157,11 +157,9 @@
       static async getImage(key) {
           return (await this.serverAPI.callPluginMethod("getImage", { filepath: key })).result;
       }
-
       static async isOnline() {
           return (await this.serverAPI.callPluginMethod("isOnline", {})).result;
       }
-
       /**
        * Sets the value of a plugin's setting.
        * @param key The key of the setting to set.
@@ -1700,6 +1698,11 @@
                   await PyInterop.setSetting("screenshotsShared", screenshotsShared + 1);
                   if (notifications) {
                       PyInterop.toast("Deckshare", "Screenshots shared successfully");
+                  }
+              }
+              else if (uploadStatus.result == "307") {
+                  if (notifications) {
+                      PyInterop.toast("Deckshare", "You're currently offline, but we've queue this upload for when you reconnect.");
                   }
               }
               else {

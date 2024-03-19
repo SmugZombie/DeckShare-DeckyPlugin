@@ -92,6 +92,10 @@ export class PyInterop {
     return (await this.serverAPI.callPluginMethod<{ filepath: string }, T>("getImage", { filepath: key })).result as T;
   }
 
+  static async isOnline<T>(): Promise<T> {
+    return (await this.serverAPI.callPluginMethod("isOnline", {})).result as T;
+  }  
+
   /**
    * Sets the value of a plugin's setting.
    * @param key The key of the setting to set.
