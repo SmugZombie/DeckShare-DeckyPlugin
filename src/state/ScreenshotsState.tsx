@@ -24,7 +24,7 @@ interface PublicScreenshotsContext extends PublicScreenshotsState {
 }
 
 interface PublicUploadQueueContext extends PublicScreenshotsState {
-  setUploadQueue(screenshots: ScreenshotsDictionary): void;
+  setUploadQueue(uploadQueue: ScreenshotsDictionary): void;
 }
 
 export class ScreenshotsState {
