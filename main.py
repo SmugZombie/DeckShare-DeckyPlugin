@@ -201,6 +201,7 @@ class Plugin:
         status = await self.queueUploads(self, newestScreenshot, getFilenameFromFilepath(newestScreenshot))
       else:
         status = await upload_file(newestScreenshot, self.discordWebhookURL)
+        await self.processQueue(self, False)
         log(f"upload_file response: {status}")
       return status
     except Exception as e:
@@ -243,12 +244,13 @@ class Plugin:
       log(f"clearQueue - Error: {e}")
       return False
 
-  async def processQueue(self):
+  async def processQueue(self, checkStatus=True):
     try:
       # Check to ensure we are online
-      if await self.isOnline(self) == False:
-        log("processQueue - Online Check Failed")
-        return False
+      if(checkStatus == True):
+        if await self.isOnline(self) == False:
+          log("processQueue - Online Check Failed")
+          return False
       # Fetch the current queue
       queue = self.settingsManager.getSetting("uploadQueue", {})
       # Check if the queue is empty, if so no need to continue
