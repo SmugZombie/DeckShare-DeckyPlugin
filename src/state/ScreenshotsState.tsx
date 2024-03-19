@@ -8,6 +8,7 @@ type ScreenshotsDictionary = {
 
 interface PublicScreenshotsState {
   screenshots: ScreenshotsDictionary;
+  uploadQueue: Screenshot[];
   screenshotsList: Screenshot[];
   uploadQueueList: Screenshot[];
   runningScreenshots: Set<string>;
