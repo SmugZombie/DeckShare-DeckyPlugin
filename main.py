@@ -210,13 +210,31 @@ class Plugin:
 
   async def queueUploads(self, filepath, filename):
     try:
-      queue = self.settingsManager.getSetting("uploadQueue", [])
+      queue = self.settingsManager.getSetting("uploadQueue", {})
       queue[filename] = {'path': filepath, 'name': filename, 'id': filename}
       self.settingsManager.setSetting("uploadQueue", queue)
       return 307
     except Exception as e:
       log(f"queueUploads - Error: {e}")
       return 500
+    
+  async def removeFromQueue(self, filename):
+    try:
+      queue = self.settingsManager.getSetting("uploadQueue", {})
+      del queue[filename]
+      self.settingsManager.setSetting("uploadQueue", queue)
+      return True
+    except Exception as e:
+      log(f"removeFromQueue - Error: {e}")
+      return False
+    
+  async def clearQueue(self):
+    try:
+      self.settingsManager.setSetting("uploadQueue", {})
+      return True
+    except Exception as e:
+      log(f"clearQueue - Error: {e}")
+      return False
 
   async def processQueue(self):
     try:
@@ -225,7 +243,7 @@ class Plugin:
         log("processQueue - Online Check Failed")
         return False
       # Fetch the current queue
-      queue = self.settingsManager.getSetting("uploadQueue", [])
+      queue = self.settingsManager.getSetting("uploadQueue", {})
       # Check if the queue is empty, if so no need to continue
       if(queue.length == 0):
         log("Queue is empty")
