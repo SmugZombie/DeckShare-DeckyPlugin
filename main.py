@@ -163,7 +163,7 @@ class Plugin:
 
     # Generate base64 for each remaining screenshot
     for file_name, screenshot_info in sorted_screenshots:
-      screenshot_info['base64'] = image_to_base64(screenshot_info['path'])
+      screenshot_info['base64'] = image_to_base64(getThumbnailPathFromFilepath(screenshot_info['path']))
 
     # Convert the list of tuples back to a dictionary
     return dict(sorted_screenshots)
@@ -407,3 +407,6 @@ def image_to_base64(image_path):
 
 def getFilenameFromFilepath(filepath):
   return os.path.basename(filepath)
+
+def getThumbnailPathFromFilepath(filepath):
+  return filepath.replace(os.path.basename(filepath), "thumbnails/" + os.path.basename(filepath))
