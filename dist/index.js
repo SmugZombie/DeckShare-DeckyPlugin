@@ -157,9 +157,11 @@
       static async getImage(key) {
           return (await this.serverAPI.callPluginMethod("getImage", { filepath: key })).result;
       }
+
       static async isOnline() {
           return (await this.serverAPI.callPluginMethod("isOnline", {})).result;
       }
+
       /**
        * Sets the value of a plugin's setting.
        * @param key The key of the setting to set.
