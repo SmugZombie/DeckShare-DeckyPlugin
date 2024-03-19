@@ -175,7 +175,7 @@ class Plugin:
         log("No Valid Webhook URL Found")
         return False
       # Check to ensure we are online, if not send the file to the queue
-      if self.isOnline == False:
+      if self.isOnline(self) == False:
         log("uploadScreenshot - Online Check Failed - Sending to queue")
         status = await self.queueUploads(self, filepath, getFilenameFromFilepath(filepath))
         return status
@@ -197,12 +197,12 @@ class Plugin:
       log("Newest Screenshot" + newestScreenshot)
 
       # Check to ensure we are online
-      if self.isOnline == False:
+      if self.isOnline(self) == False:
         log("uploadScreenshots - Online Check Failed - Sending to queue")
         status = await self.queueUploads(self, newestScreenshot, getFilenameFromFilepath(newestScreenshot))
       else:
         status = await upload_file(newestScreenshot, self.discordWebhookURL)
-        log(status)
+        log(f"upload_file response: {status}")
         return status
     except Exception as e:
       log(f"An error occurred: {e}")
@@ -220,7 +220,7 @@ class Plugin:
   async def processQueue(self):
     try:
       # Check to ensure we are online
-      if self.isOnline == False:
+      if self.isOnline(self) == False:
         log("processQueue - Online Check Failed")
         return False
       # Fetch the current queue
