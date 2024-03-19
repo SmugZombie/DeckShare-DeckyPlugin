@@ -217,6 +217,14 @@ class Plugin:
       log(f"queueUploads - Error: {e}")
       return 500
     
+  async def getUploadQueue(self):
+    try:
+      queue = self.settingsManager.getSetting("uploadQueue", {})
+      return queue
+    except Exception as e:
+      log(f"getUploadQueue - Error: {e}")
+      return False
+    
   async def removeFromQueue(self, filename):
     try:
       queue = self.settingsManager.getSetting("uploadQueue", {})
@@ -250,11 +258,11 @@ class Plugin:
       # Log the length of the queue
       log(f"Offline Queue Length: {len(queue)}")
       # Loop through the queue and upload each file
-      for file in queue:
-          status = await upload_file(file['path'], self.discordWebhookURL)
-          if(status == 200):
-            # If the upload was successful, remove the file from the queue
-            del queue[file]
+      for filename, fileinfo in queue.items():
+        status = await upload_file(fileinfo['path'], self.discordWebhookURL)
+        log(f"processQueue - {filename} - {status}")
+        if status == 200:
+          del queue[filename]
     except Exception as e:
       log(f"processQueue - Error: {e}")
 
@@ -271,7 +279,6 @@ class Plugin:
       # Attempt to create a socket connection to a known server
       socket.create_connection(("8.8.8.8", 53), timeout=3)
       self.settingsManager.setSetting("online", True)
-      await self.processQueue(self)
       return True
     except OSError:
       pass
