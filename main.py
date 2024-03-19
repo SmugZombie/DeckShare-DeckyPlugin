@@ -244,7 +244,7 @@ class Plugin:
       # Fetch the current queue
       queue = self.settingsManager.getSetting("uploadQueue", {})
       # Check if the queue is empty, if so no need to continue
-      if(queue.length == 0):
+      if len(queue) == 0:
         log("Queue is empty")
         return False
       # Log the length of the queue
