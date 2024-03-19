@@ -247,14 +247,14 @@
       static async uploadScreenshot(key) {
           return await this.serverAPI.callPluginMethod("uploadScreenshot", { filepath: key });
       }
-      /**
-       * Sets the value of a plugin's setting.
-       * @param key The key of the setting to set.
-       * @param newVal The new value for the setting.
-       * @returns A void promise resolving once the setting is set.
-       */
       static async uploadScreenshots() {
           return await this.serverAPI.callPluginMethod("uploadScreenshots", {});
+      }
+      static async getUploadQueue() {
+          return await this.serverAPI.callPluginMethod("getUploadQueue", {});
+      }
+      static async processQueue() {
+          return await this.serverAPI.callPluginMethod("processQueue", {});
       }
   }
 
@@ -1702,6 +1702,11 @@
                       PyInterop.toast("Deckshare", "Screenshots shared successfully");
                   }
               }
+              else if (uploadStatus.result == "307") {
+                  if (notifications) {
+                      PyInterop.toast("Deckshare", "You're currently offline, but we've queue this upload for when you reconnect.");
+                  }
+              }
               else {
                   if (notifications) {
                       PyInterop.toast("DeckShare", "Error! Screenshots failed to upload");
@@ -1912,6 +1917,7 @@
 
   const Content = ({}) => {
       const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
+      const [uploadQueue, setUploadQueue] = React.useState({});
       const [webhookUrl, setWebhookUrl] = React.useState("");
       const [isError, setIsError] = React.useState(false);
       const [errorMessage, setErrorMessage] = React.useState("");
@@ -1948,10 +1954,25 @@
               setIsLoadingUrl(false);
           });
       }
+      async function processQueue() {
+          try {
+              await PyInterop.processQueue().then(() => { });
+              await PyInterop.getUploadQueue().then((res) => {
+                  setUploadQueue(res.result);
+              });
+          }
+          catch (e) {
+              PyInterop.log("Error in processQueue: " + e);
+              PyInterop.toast("DeckShare Error", e.toString());
+          }
+      }
       async function reload() {
           try {
               await PyInterop.getScreenshots().then((res) => {
                   setScreenshots(res.result);
+              });
+              await PyInterop.getUploadQueue().then((res) => {
+                  setUploadQueue(res.result);
               });
           }
           catch (e) {
@@ -1986,7 +2007,11 @@
           setNotifications(value);
       }
       async function checkOnlineStatus() {
-          setIsOnline(await PyInterop.isOnline());
+          let isOnline = await PyInterop.isOnline();
+          setIsOnline(isOnline);
+          if (isOnline) {
+              await processQueue();
+          }
           setTimeout(async () => { await checkOnlineStatus(); }, 150000);
       }
       async function loadSettings() {
@@ -2053,6 +2078,7 @@
                           errorMessage)) : (""),
                       (isSaving) ? (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Validating webhook url.")) : (""),
                       (isSaved) ? (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Saved Successfully")) : (""))),
+              window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: `Pending Uploads: ${Object.keys(uploadQueue).length}` }, (Object.keys(uploadQueue).length) ? (window.SP_REACT.createElement(deckyFrontendLib.ButtonItem, { layout: "below", onClick: processQueue }, "Process Queue")) : null),
               window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Recent Screenshots" }, (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
                   screenshotsList.map((itm) => (window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))),
                   window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,

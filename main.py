@@ -24,7 +24,7 @@ class Plugin:
   guidesDirPath = f"/home/{pluginUser}/homebrew/plugins/deckshare-plugin/guides"
   settingsManager = SettingsManager(name='DeckShare', settings_directory=pluginSettingsDir)
   steamdir = "/home/deck/.local/share/Steam/"
-  version = "0.1.2beta"
+  version = "0.1.3beta"
   discordWebhookURLBase = "https://discord.com/api/webhooks/"
 
   # Validates the Webhook URL by sending a GET request to the URL and checking the status code of the response
@@ -174,8 +174,13 @@ class Plugin:
       if(self.discordWebhookURL == "" or self.discordWebhookURL == False):
         log("No Valid Webhook URL Found")
         return False
-      status = await upload_file(filepath, self.discordWebhookURL)
-      log(status)
+      # Check to ensure we are online, if not send the file to the queue
+      if await self.isOnline(self) == False:
+        log("uploadScreenshot - Online Check Failed - Sending to queue")
+        status = await self.queueUploads(self, filepath, getFilenameFromFilepath(filepath))
+      else:
+        status = await upload_file(filepath, self.discordWebhookURL)
+        log(status)
       return status
     except Exception as e:
       log(f"An error occurred: {e}")
@@ -189,12 +194,79 @@ class Plugin:
         return False
       newestScreenshot = get_newest_jpg(self)
       log("Newest Screenshot" + newestScreenshot)
-      status = await upload_file(newestScreenshot, self.discordWebhookURL)
-      log(status)
+
+      # Check to ensure we are online
+      if await self.isOnline(self) == False:
+        log("uploadScreenshots - Online Check Failed - Sending to queue")
+        status = await self.queueUploads(self, newestScreenshot, getFilenameFromFilepath(newestScreenshot))
+      else:
+        status = await upload_file(newestScreenshot, self.discordWebhookURL)
+        await self.processQueue(self, False)
+        log(f"upload_file response: {status}")
       return status
     except Exception as e:
       log(f"An error occurred: {e}")
     return False
+
+  async def queueUploads(self, filepath, filename):
+    try:
+      queue = self.settingsManager.getSetting("uploadQueue", {})
+      queue[filename] = {'path': filepath, 'name': filename, 'id': filename}
+      self.settingsManager.setSetting("uploadQueue", queue)
+      return 307
+    except Exception as e:
+      log(f"queueUploads - Error: {e}")
+      return 500
+    
+  async def getUploadQueue(self):
+    try:
+      queue = self.settingsManager.getSetting("uploadQueue", {})
+      return queue
+    except Exception as e:
+      log(f"getUploadQueue - Error: {e}")
+      return False
+    
+  async def removeFromQueue(self, filename):
+    try:
+      queue = self.settingsManager.getSetting("uploadQueue", {})
+      del queue[filename]
+      self.settingsManager.setSetting("uploadQueue", queue)
+      return True
+    except Exception as e:
+      log(f"removeFromQueue - Error: {e}")
+      return False
+    
+  async def clearQueue(self):
+    try:
+      self.settingsManager.setSetting("uploadQueue", {})
+      return True
+    except Exception as e:
+      log(f"clearQueue - Error: {e}")
+      return False
+
+  async def processQueue(self, checkStatus=True):
+    try:
+      # Check to ensure we are online
+      if(checkStatus == True):
+        if await self.isOnline(self) == False:
+          log("processQueue - Online Check Failed")
+          return False
+      # Fetch the current queue
+      queue = self.settingsManager.getSetting("uploadQueue", {})
+      # Check if the queue is empty, if so no need to continue
+      if len(queue) == 0:
+        log("Queue is empty")
+        return False
+      # Log the length of the queue
+      log(f"Offline Queue Length: {len(queue)}")
+      # Loop through the queue and upload each file
+      for filename, fileinfo in queue.items():
+        status = await upload_file(fileinfo['path'], self.discordWebhookURL)
+        log(f"processQueue - {filename} - {status}")
+        if status == 200:
+          del queue[filename]
+    except Exception as e:
+      log(f"processQueue - Error: {e}")
 
   def _getGuides(self):
     for guideFileName in os.listdir(self.guidesDirPath):
@@ -204,14 +276,14 @@ class Plugin:
 
     pass
 
-  def isOnline(self):
+  async def isOnline(self):
     try:
-        # Attempt to create a socket connection to a known server
-        socket.create_connection(("8.8.8.8", 53), timeout=3)
-        self.settingsManager.setSetting("online", True)
-        return True
+      # Attempt to create a socket connection to a known server
+      socket.create_connection(("8.8.8.8", 53), timeout=3)
+      self.settingsManager.setSetting("online", True)
+      return True
     except OSError:
-        pass
+      pass
     self.settingsManager.setSetting("online", False)
     return False
 
@@ -332,3 +404,6 @@ def image_to_base64(image_path):
   except Exception as e:
     log(f"Error: {e}")
     return None
+
+def getFilenameFromFilepath(filepath):
+  return os.path.basename(filepath)

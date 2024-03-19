@@ -92,6 +92,10 @@ export class PyInterop {
     return (await this.serverAPI.callPluginMethod<{ filepath: string }, T>("getImage", { filepath: key })).result as T;
   }
 
+  static async isOnline<T>(): Promise<T> {
+    return (await this.serverAPI.callPluginMethod("isOnline", {})).result as T;
+  }  
+
   /**
    * Sets the value of a plugin's setting.
    * @param key The key of the setting to set.
@@ -188,13 +192,15 @@ export class PyInterop {
     return await this.serverAPI.callPluginMethod<{ filepath: string }, void>("uploadScreenshot", { filepath: key });
   }
 
-  /**
-   * Sets the value of a plugin's setting.
-   * @param key The key of the setting to set.
-   * @param newVal The new value for the setting.
-   * @returns A void promise resolving once the setting is set.
-   */
   static async uploadScreenshots<T>(): Promise<ServerResponse<void>> {
     return await this.serverAPI.callPluginMethod<{ key: string, newVal : T}, void>("uploadScreenshots", { });
+  }
+
+  static async getUploadQueue(): Promise<ServerResponse<ScreenshotsDictionary>> {
+    return await this.serverAPI.callPluginMethod<{}, ScreenshotsDictionary>("getUploadQueue", {});
+  }
+
+  static async processQueue(): Promise<ServerResponse<void>> {
+    return await this.serverAPI.callPluginMethod<{ }, void>("processQueue", { });
   }
 }
