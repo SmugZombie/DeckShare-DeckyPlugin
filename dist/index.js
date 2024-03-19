@@ -1952,6 +1952,18 @@
               setIsLoadingUrl(false);
           });
       }
+      async function processQueue() {
+          try {
+              await PyInterop.processQueue().then(() => { });
+              await PyInterop.getUploadQueue().then((res) => {
+                  setUploadQueue(res.result);
+              });
+          }
+          catch (e) {
+              PyInterop.log("Error in processQueue: " + e);
+              PyInterop.toast("DeckShare Error", e.toString());
+          }
+      }
       async function reload() {
           try {
               await PyInterop.getScreenshots().then((res) => {
@@ -2060,9 +2072,7 @@
                           errorMessage)) : (""),
                       (isSaving) ? (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Validating webhook url.")) : (""),
                       (isSaved) ? (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Saved Successfully")) : (""))),
-              window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Pending Uploads" }, (uploadQueue) ? (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
-                  "Waiting to upload ",
-                  Object.keys(uploadQueue))) : (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "No Pending Uploads"))),
+              window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: `Pending Uploads: ${Object.keys(uploadQueue).length}` }, (uploadQueue) ? (window.SP_REACT.createElement(deckyFrontendLib.ButtonItem, { layout: "below", onClick: processQueue }, "Process Queue")) : null),
               window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Recent Screenshots" }, (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
                   screenshotsList.map((itm) => (window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))),
                   window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,

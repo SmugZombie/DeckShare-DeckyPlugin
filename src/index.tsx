@@ -66,6 +66,18 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
     });
   }
 
+  async function processQueue(): Promise<void> {
+    try{
+      await PyInterop.processQueue().then(() => {});
+      await PyInterop.getUploadQueue().then((res) => {
+        setUploadQueue(res.result as ScreenshotsDictionary);
+      });
+    }catch(e:string){
+      PyInterop.log("Error in processQueue: " + e);
+      PyInterop.toast("DeckShare Error", e.toString());
+    }
+  }
+
   async function reload(): Promise<void> {
     try{
       await PyInterop.getScreenshots().then((res) => {
@@ -188,13 +200,13 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
             ) : ("")}
           </PanelSectionRow>
         </PanelSection>
-        <PanelSection title="Pending Uploads">
+        <PanelSection title={`Pending Uploads: ${Object.keys(uploadQueue).length}`}>
           
         {(uploadQueue) ? (
-            <PanelSectionRow>Waiting to upload {Object.keys(uploadQueue)}</PanelSectionRow>
-          ) : (
-            <PanelSectionRow>No Pending Uploads</PanelSectionRow>
-          )}
+          <ButtonItem layout="below" onClick={processQueue} >
+            Process Queue
+          </ButtonItem>
+        ) : null}
 
         </PanelSection>
         <PanelSection title="Recent Screenshots">
