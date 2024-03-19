@@ -202,7 +202,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
         </PanelSection>
         <PanelSection title={`Pending Uploads: ${Object.keys(uploadQueue).length}`}>
           
-        {(uploadQueue) ? (
+        {(Object.keys(uploadQueue).length) ? (
           <ButtonItem layout="below" onClick={processQueue} >
             Process Queue
           </ButtonItem>
