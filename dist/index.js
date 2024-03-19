@@ -391,9 +391,7 @@
       }
   }
   const ScreenshotsContext = React.createContext(null);
-  const UploadQueueContext = React.createContext(null);
   const useScreenshotsState = () => React.useContext(ScreenshotsContext);
-  const useUploadQueueState = () => React.useContext(UploadQueueContext);
   const ScreenshotsContextProvider = ({ children, screenshotsStateClass }) => {
       const [publicState, setPublicState] = React.useState({
           ...screenshotsStateClass.getPublicState()
@@ -1917,7 +1915,7 @@
 
   const Content = ({}) => {
       const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
-      const { uploadQueue, setUploadQueue, uploadQueueList } = useUploadQueueState();
+      const { uploadQueue, setUploadQueue } = React.useState({});
       const [webhookUrl, setWebhookUrl] = React.useState("");
       const [isError, setIsError] = React.useState(false);
       const [errorMessage, setErrorMessage] = React.useState("");
@@ -2062,7 +2060,9 @@
                           errorMessage)) : (""),
                       (isSaving) ? (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Validating webhook url.")) : (""),
                       (isSaved) ? (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "Saved Successfully")) : (""))),
-              window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Pending Uploads" }, (uploadQueueList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" } }, "No pending uploads")) : (window.SP_REACT.createElement(React.Fragment, null, uploadQueueList.map((itm) => (window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm })))))),
+              window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Pending Uploads" }, (uploadQueue) ? (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
+                  "Waiting to upload ",
+                  Object.keys(uploadQueue))) : (window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null, "No Pending Uploads"))),
               window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Recent Screenshots" }, (screenshotsList.length == 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null,
                   screenshotsList.map((itm) => (window.SP_REACT.createElement(ScreenshotLauncher, { screenshot: itm }))),
                   window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,

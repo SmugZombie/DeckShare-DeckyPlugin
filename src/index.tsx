@@ -28,7 +28,7 @@ declare global {
 
 const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
   const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
-  const { uploadQueue, setUploadQueue, uploadQueueList } = useUploadQueueState();
+  const { uploadQueue, setUploadQueue } = useState({});
   const [ webhookUrl, setWebhookUrl ] = useState("");
   const [ isError, setIsError ] = useState(false);
   const [ errorMessage, setErrorMessage ] = useState("");
@@ -189,19 +189,13 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
           </PanelSectionRow>
         </PanelSection>
         <PanelSection title="Pending Uploads">
-          {
-            (uploadQueueList.length == 0) ? (
-              <div style={{ textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" }}>No pending uploads</div>
-            ) : (
-              <>
-                {
-                  uploadQueueList.map((itm: Screenshot) => (
-                    <ScreenshotLauncher screenshot={itm} />
-                  ))
-                }
-              </>
-            )
-          }
+          
+        {(uploadQueue) ? (
+            <PanelSectionRow>Waiting to upload {Object.keys(uploadQueue)}</PanelSectionRow>
+          ) : (
+            <PanelSectionRow>No Pending Uploads</PanelSectionRow>
+          )}
+
         </PanelSection>
         <PanelSection title="Recent Screenshots">
           {
