@@ -9,6 +9,7 @@ type ScreenshotsDictionary = {
 interface PublicScreenshotsState {
   screenshots: ScreenshotsDictionary;
   screenshotsList: Screenshot[];
+  uploadQueueList: Screenshot[];
   runningScreenshots: Set<string>;
   reorderableScreenshots: ReorderableEntry<Screenshot>[];
   currentGame: SteamAppOverview | null;
@@ -20,6 +21,10 @@ interface PublicScreenshotsContext extends PublicScreenshotsState {
   setIsRunning(screenshotId: string, value: boolean): void;
   setCurrentGame(overview: SteamAppOverview | null): void;
   setGameRunning(isRunning: boolean): void;
+}
+
+interface PublicUploadQueueContext extends PublicScreenshotsState {
+  setUploadQueue(screenshots: ScreenshotsDictionary): void;
 }
 
 export class ScreenshotsState {
@@ -92,7 +97,9 @@ export class ScreenshotsState {
 }
 
 const ScreenshotsContext = createContext<PublicScreenshotsContext>(null as any);
+const UploadQueueContext = createContext<PublicUploadQueueContext>(null as any);
 export const useScreenshotsState = () => useContext(ScreenshotsContext);
+export const useUploadQueueState = () => useContext(UploadQueueContext);
 
 interface ProviderProps {
   screenshotsStateClass: ScreenshotsState

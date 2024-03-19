@@ -16,7 +16,7 @@ import { IoApps } from "react-icons/io5";
 import { ScreenshotLauncher } from "./components/ScreenshotLauncher";
 import { PyInterop } from "./PyInterop";
 import { Screenshot } from "./lib/data-structures/Screenshot";
-import { ScreenshotsContextProvider, ScreenshotsState, useScreenshotsState } from "./state/ScreenshotsState";
+import { ScreenshotsContextProvider, ScreenshotsState, useScreenshotsState, useUploadQueueState } from "./state/ScreenshotsState";
 import { PluginController } from "./lib/controllers/PluginController";
 
 declare global {
@@ -28,6 +28,7 @@ declare global {
 
 const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
   const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
+  const { uploadQueue, setUploadQueue, uploadQueueList } = useUploadQueueState();
   const [ webhookUrl, setWebhookUrl ] = useState("");
   const [ isError, setIsError ] = useState(false);
   const [ errorMessage, setErrorMessage ] = useState("");
@@ -69,6 +70,9 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
     try{
       await PyInterop.getScreenshots().then((res) => {
         setScreenshots(res.result as ScreenshotsDictionary);
+      });
+      await PyInterop.getUploadQueue().then((res) => {
+        setUploadQueue(res.result as ScreenshotsDictionary);
       });
     }catch(e){  
       PyInterop.log("Error in reload: " + e);
@@ -183,6 +187,21 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
               <PanelSectionRow>Saved Successfully</PanelSectionRow>
             ) : ("")}
           </PanelSectionRow>
+        </PanelSection>
+        <PanelSection title="Pending Uploads">
+          {
+            (uploadQueueList.length == 0) ? (
+              <div style={{ textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" }}>No pending uploads</div>
+            ) : (
+              <>
+                {
+                  uploadQueueList.map((itm: Screenshot) => (
+                    <ScreenshotLauncher screenshot={itm} />
+                  ))
+                }
+              </>
+            )
+          }
         </PanelSection>
         <PanelSection title="Recent Screenshots">
           {
