@@ -1,10 +1,8 @@
 import { Navigation } from "decky-frontend-lib";
-import { PyInterop } from "../../PyInterop";
-import { WebSocketClient } from "../../WebsocketClient";
-import { ScreenshotsState } from "../../state/ScreenshotsState";
-import { Screenshot } from "../data-structures/Screenshot";
-import { InstancesController } from "./InstancesController";
-import { SteamController } from "./SteamController";
+import { PyInterop } from "../PyInterop";
+import { WebSocketClient } from "../WebsocketClient";
+import { Screenshot } from "../lib/datastructure.screenshots";
+import { SteamController } from "./steamcontroller";
 
 /**
  * Enum for the different hook events.
@@ -34,7 +32,6 @@ type RegisteredDict = { [key in Hook]: Unregisterer }
 export class HookController {
   private state: ScreenshotsState;
   private steamController: SteamController;
-  private instancesController: InstancesController;
   private webSocketClient: WebSocketClient;
 
   // @ts-ignore
@@ -49,10 +46,8 @@ export class HookController {
    * @param webSocketClient The WebSocketClient to use.
    * @param state The plugin state.
    */
-  constructor(steamController: SteamController, instancesController: InstancesController, webSocketClient: WebSocketClient, state: ScreenshotsState) {
-    this.state = state;
+  constructor(steamController: SteamController, webSocketClient: WebSocketClient) {
     this.steamController = steamController;
-    this.instancesController = instancesController;
     this.webSocketClient = webSocketClient;
 
     for (const hook of Object.values(Hook)) {

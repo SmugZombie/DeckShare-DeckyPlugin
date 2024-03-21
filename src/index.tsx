@@ -1,33 +1,27 @@
-import {
+import { 
+  definePlugin, 
+  ServerAPI, 
+  staticClasses, 
   ButtonItem,
-  definePlugin,
   Focusable,
   gamepadDialogClasses,
   PanelSection,
   PanelSectionRow,
   quickAccessControlsClasses,
-  ServerAPI,
-  staticClasses,
   TextField,
   ToggleField,
-} from "decky-frontend-lib";
-import { VFC, Fragment, useRef, useState } from "react";
-import { IoApps } from "react-icons/io5";
-import { ScreenshotLauncher } from "./components/ScreenshotLauncher";
+  Navigation,
+  DialogButton
+} from "decky-frontend-lib"
+import { VFC, Fragment, useRef, useState, useEffect } from "react";
 import { PyInterop } from "./PyInterop";
-import { Screenshot } from "./lib/data-structures/Screenshot";
-import { ScreenshotsContextProvider, ScreenshotsState, useScreenshotsState, useUploadQueueState } from "./state/ScreenshotsState";
-import { PluginController } from "./lib/controllers/PluginController";
-
+import Router from "./routes/router";
+import { PluginController } from "./controllers/plugincontroller";
 declare global {
   var SteamClient: SteamClient;
-  var collectionStore: CollectionStore;
-  var appStore: AppStore;
-  var loginStore: LoginStore;
 }
 
 const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
-  const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
   const [ uploadQueue, setUploadQueue ] = useState({});
   const [ webhookUrl, setWebhookUrl ] = useState("");
   const [ isError, setIsError ] = useState(false);
@@ -41,7 +35,6 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
   const [ screenshotsTaken, setScreenshotsTaken ] = useState(0);
   const [ screenshotsShared, setScreenshotsShared ] = useState(0);
   const [ isOnline, setIsOnline ] = useState(false);
-  const tries = useRef(0);
 
   async function saveWebhookUrl(webhookUrl:string) {
     setIsLoadingUrl(true);
@@ -70,7 +63,7 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
     try{
       await PyInterop.processQueue().then(() => {});
       await PyInterop.getUploadQueue().then((res) => {
-        setUploadQueue(res.result as ScreenshotsDictionary);
+        setUploadQueue(res.result);
       });
     }catch(e:string){
       PyInterop.log("Error in processQueue: " + e);
@@ -80,11 +73,11 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
 
   async function reload(): Promise<void> {
     try{
-      await PyInterop.getScreenshots().then((res) => {
-        setScreenshots(res.result as ScreenshotsDictionary);
-      });
+      /*await PyInterop.getScreenshots().then((res) => {
+        setScreenshots(res.result);
+      });*/
       await PyInterop.getUploadQueue().then((res) => {
-        setUploadQueue(res.result as ScreenshotsDictionary);
+        setUploadQueue(res.result);
       });
     }catch(e){  
       PyInterop.log("Error in reload: " + e);
@@ -151,14 +144,15 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
   if(version == "0.0.0"){
     loadSettings();
     checkOnlineStatus();
+    reload();
+  }
+
+  const NavigateToPage = (path:string) => {
+    Navigation.Navigate(path)
+    Navigation.CloseSideMenus()
   }
 
   loadWebhookUrl(false);
-
-  if (Object.values(screenshots as ScreenshotsDictionary).length === 0 && tries.current < 10) {
-    reload();
-    tries.current++;
-  }
 
   return (
     <>
@@ -205,33 +199,11 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
           </PanelSectionRow>
         </PanelSection>
         <PanelSection title={`Pending Uploads: ${Object.keys(uploadQueue).length}`}>
-          
         {(Object.keys(uploadQueue).length) ? (
           <ButtonItem layout="below" onClick={processQueue} >
             Process Queue
           </ButtonItem>
         ) : null}
-
-        </PanelSection>
-        <PanelSection title="Recent Screenshots">
-          {
-            (screenshotsList.length == 0) ? (
-              <div style={{ textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" }}>No screenshots found</div>
-            ) : (
-              <>
-                {
-                  screenshotsList.map((itm: Screenshot) => (
-                    <ScreenshotLauncher screenshot={itm} />
-                  ))
-                }
-                <PanelSectionRow>
-                  <ButtonItem layout="below" onClick={reload} >
-                    Reload Screenshots
-                  </ButtonItem>
-                </PanelSectionRow>
-              </>
-            )
-          }
         </PanelSection>
         <PanelSection title="Credits">
           <PanelSectionRow>Created with ❤️ by SmugZombie</PanelSectionRow>
@@ -247,33 +219,28 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
             <PanelSectionRow>Currently Offline</PanelSectionRow>
           )}
           <Focusable>
-            <PanelSectionRow></PanelSectionRow>
+            <DialogButton onClick={()=>NavigateToPage("/deckshare")}>Configuration</DialogButton>
           </Focusable>
         </PanelSection>
       </div>
     </>
-  );
-};
+  )
+}
 
 export default definePlugin((serverApi: ServerAPI) => {
   PyInterop.setServer(serverApi);
-  const state = new ScreenshotsState();
-  PluginController.setup(serverApi, state);
+  PluginController.setup(serverApi);
   const loginHook = PluginController.initOnLogin();
+
+  serverApi.routerHook.addRoute("/deckshare", Router);
 
   return {
     title: <div className={staticClasses.Title}>DeckShare</div>,
-    content: (
-      <ScreenshotsContextProvider screenshotsStateClass={state}>
-        <Content serverAPI={serverApi} />
-      </ScreenshotsContextProvider>
-    ),
-    icon: <IoApps />,
-    onDismount() {
-      loginHook.unregister();
-      serverApi.routerHook.removeRoute("/deckshare-config");
-      PluginController.dismount();
+    content:  <Content serverAPI={serverApi} />,
+    icon: "",
+    onDismount: () => {
+      PyInterop.log("Unmounting DeckShare Plugin");
     },
-    alwaysRender: true
-  };
-});
+    alwaysRender: true,
+  }
+})
