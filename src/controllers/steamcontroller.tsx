@@ -1,6 +1,6 @@
 import { sleep } from "decky-frontend-lib";
-import { PyInterop } from "../../PyInterop";
-import { waitForCondition } from "../Utils";
+import { PyInterop } from "../PyInterop";
+import { waitForCondition } from "../utils";
 
 /**
  * Wrapper class for the SteamClient interface.

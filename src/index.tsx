@@ -1,35 +1,30 @@
-import {
+import { 
+  definePlugin, 
+  ServerAPI, 
+  staticClasses, 
   ButtonItem,
-  definePlugin,
   Focusable,
   gamepadDialogClasses,
   PanelSection,
   PanelSectionRow,
   quickAccessControlsClasses,
-  ServerAPI,
-  staticClasses,
   TextField,
   ToggleField,
-} from "decky-frontend-lib";
-import { VFC, Fragment, useRef, useState } from "react";
-import { IoApps } from "react-icons/io5";
-import { ScreenshotLauncher } from "./components/ScreenshotLauncher";
+  Navigation,
+  DialogButton
+} from "decky-frontend-lib"
+import { VFC, Fragment, useRef, useState, useEffect } from "react";
 import { PyInterop } from "./PyInterop";
-import { Screenshot } from "./lib/data-structures/Screenshot";
-import { ScreenshotsContextProvider, ScreenshotsState, useScreenshotsState, useUploadQueueState } from "./state/ScreenshotsState";
-import { PluginController } from "./lib/controllers/PluginController";
-
+import Router from "./routes/router";
+import { PluginController } from "./controllers/plugincontroller";
+import logo from '../assets/images/discordlogo.png';
 declare global {
   var SteamClient: SteamClient;
-  var collectionStore: CollectionStore;
-  var appStore: AppStore;
-  var loginStore: LoginStore;
 }
 
 const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
-  const { screenshots, setScreenshots, screenshotsList } = useScreenshotsState();
   const [ uploadQueue, setUploadQueue ] = useState({});
-  const [ webhookUrl, setWebhookUrl ] = useState("");
+  const [ isLoaded, setIsLoaded ] = useState(false);
   const [ isError, setIsError ] = useState(false);
   const [ errorMessage, setErrorMessage ] = useState("");
   const [ isLoadingUrl, setIsLoadingUrl ] = useState(false);
@@ -41,36 +36,12 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
   const [ screenshotsTaken, setScreenshotsTaken ] = useState(0);
   const [ screenshotsShared, setScreenshotsShared ] = useState(0);
   const [ isOnline, setIsOnline ] = useState(false);
-  const tries = useRef(0);
-
-  async function saveWebhookUrl(webhookUrl:string) {
-    setIsLoadingUrl(true);
-    setIsSaving(true);
-    setIsSaved(false);
-    await PyInterop.setWebhookUrl(webhookUrl).then((res) => {
-      setIsSaving(false);
-      if (res.result?.toLowerCase().includes("invalid")) {
-        setIsError(true);
-        setErrorMessage(res.result);
-        setTimeout(() => { setIsError(false); setErrorMessage(""); setIsSaved(false) }, 3000);
-      }else{
-        if(res.result){
-          setIsError(false);
-          setErrorMessage("");
-          setWebhookUrl(res.result);
-          setIsSaved(true);
-          setTimeout(() => { setIsSaved(false); }, 3000);
-        }
-      }
-      setIsLoadingUrl(false);
-    });
-  }
 
   async function processQueue(): Promise<void> {
     try{
       await PyInterop.processQueue().then(() => {});
       await PyInterop.getUploadQueue().then((res) => {
-        setUploadQueue(res.result as ScreenshotsDictionary);
+        setUploadQueue(res.result);
       });
     }catch(e:string){
       PyInterop.log("Error in processQueue: " + e);
@@ -80,34 +51,34 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
 
   async function reload(): Promise<void> {
     try{
-      await PyInterop.getScreenshots().then((res) => {
-        setScreenshots(res.result as ScreenshotsDictionary);
-      });
+      /*await PyInterop.getScreenshots().then((res) => {
+        setScreenshots(res.result);
+      });*/
       await PyInterop.getUploadQueue().then((res) => {
-        setUploadQueue(res.result as ScreenshotsDictionary);
+        setUploadQueue(res.result);
       });
     }catch(e){  
       PyInterop.log("Error in reload: " + e);
     }
   }
 
-  async function loadWebhookUrl(force=true) {
-    if (((webhookUrl == "" || webhookUrl == null || webhookUrl == "False") && isLoadingUrl == false) || force == true) {
+  async function loadWebhookUrl(){
+    try{
       setIsLoadingUrl(true);
       await PyInterop.getWebhookUrl().then((res) => {
-
-        if (res.result?.toLowerCase().includes("invalid")) {
+        let webhookUrl = res.result;
+        if (webhookUrl?.toLowerCase().includes("invalid") || webhookUrl == "" || webhookUrl == null || webhookUrl == "False" || webhookUrl == "https://discord.com/api/webhooks/") {
           setIsError(true);
-          setErrorMessage(res.result);
+          setErrorMessage("Setup not completed. Please visit the advanced settings to configure the webhook url.");
         }else{
-          if(res.result){
-            setIsError(false);
-            setWebhookUrl(res.result);
-            setErrorMessage("");
-          }
+          setIsError(false);
+          setErrorMessage("");
         }
         setIsLoadingUrl(false);
       });
+
+    }catch(e){
+      PyInterop.log("Error in loadWebhookUrl: " + e);
     }
   }
 
@@ -127,7 +98,6 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
     if(isOnline){
       await processQueue();
     }
-    setTimeout(async () => { await checkOnlineStatus(); }, 150000);
   }
 
   async function loadSettings() {
@@ -142,22 +112,23 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
       setScreenshotsTaken(screenshotsTaken);
       const screenshotsShared = await PyInterop.getSetting("screenshotsShared", 0);
       setScreenshotsShared(screenshotsShared);
+      setIsLoaded(true);
       setTimeout(async () => { await loadSettings(); reload(); }, 5000);
     }catch(e){
       PyInterop.log("Error in loadSettings: " + e);
     }
   }
 
-  if(version == "0.0.0"){
+  useEffect(() => {
+    loadWebhookUrl();
     loadSettings();
     checkOnlineStatus();
-  }
-
-  loadWebhookUrl(false);
-
-  if (Object.values(screenshots as ScreenshotsDictionary).length === 0 && tries.current < 10) {
     reload();
-    tries.current++;
+  }, [isLoaded]);
+
+  const NavigateToPage = (path:string) => {
+    Navigation.Navigate(path)
+    Navigation.CloseSideMenus()
   }
 
   return (
@@ -187,93 +158,60 @@ const Content: VFC<{ serverAPI: ServerAPI }> = ({ }) => {
         }
       `}</style>
       <div className="deckshare-scope">
-        <PanelSection title="Settings">
+        <PanelSection title="Quick Settings">
+        {(!isOnline && isLoaded) ? (
+          <PanelSectionRow style={{backgroundColor: "red", color: "yellow", textAlign: "center"}}>
+            Currently Offline. Queueing uploads.
+          </PanelSectionRow>
+        ) : null}
+        {(isError && isLoaded && !isLoadingUrl) ? (
+          <PanelSectionRow style={{backgroundColor: "red", color: "yellow", textAlign: "center"}}>
+            {errorMessage}
+          </PanelSectionRow>
+        ) : null}
           <PanelSectionRow>
             <ToggleField label="AutoShare" checked={autoUpload} onChange={(value) => toggleAutoUpload(value)} ></ToggleField>
             <ToggleField label="Notifications" checked={notifications} onChange={(value) => toggleNotifications(value)} ></ToggleField>
-            <TextField value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)}></TextField>
-            <ToggleField label="Save Webhook Url" checked={isSaving} onChange={() => saveWebhookUrl(webhookUrl)} ></ToggleField>
-            {(isError) ? (
-              <PanelSectionRow>Error: {errorMessage}</PanelSectionRow>
-            ) : ("")}
-            {(isSaving) ? (
-              <PanelSectionRow>Validating webhook url.</PanelSectionRow>
-            ) : ("")}
-            {(isSaved) ? (
-              <PanelSectionRow>Saved Successfully</PanelSectionRow>
-            ) : ("")}
+            <DialogButton onClick={()=>NavigateToPage("/deckshare")}>Advanced</DialogButton>
           </PanelSectionRow>
         </PanelSection>
-        <PanelSection title={`Pending Uploads: ${Object.keys(uploadQueue).length}`}>
-          
         {(Object.keys(uploadQueue).length) ? (
-          <ButtonItem layout="below" onClick={processQueue} >
-            Process Queue
-          </ButtonItem>
-        ) : null}
-
-        </PanelSection>
-        <PanelSection title="Recent Screenshots">
-          {
-            (screenshotsList.length == 0) ? (
-              <div style={{ textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" }}>No screenshots found</div>
-            ) : (
-              <>
-                {
-                  screenshotsList.map((itm: Screenshot) => (
-                    <ScreenshotLauncher screenshot={itm} />
-                  ))
-                }
-                <PanelSectionRow>
-                  <ButtonItem layout="below" onClick={reload} >
-                    Reload Screenshots
-                  </ButtonItem>
-                </PanelSectionRow>
-              </>
-            )
-          }
-        </PanelSection>
+          <PanelSection title={`Pending Uploads: ${Object.keys(uploadQueue).length}`}>
+            <ButtonItem layout="below" onClick={processQueue} >
+              Process Queue
+            </ButtonItem>
+          </PanelSection>
+        ) : null }
         <PanelSection title="Credits">
-          <PanelSectionRow>Created with ❤️ by SmugZombie</PanelSectionRow>
-          <PanelSectionRow>Visit: https://deckshare.zip</PanelSectionRow>
-          <PanelSectionRow>Version: {version}</PanelSectionRow>
+          <PanelSectionRow style={{textAlign: "center"}}>Created with ❤️ by SmugZombie</PanelSectionRow>
+          <PanelSectionRow style={{textAlign: "center"}}>Visit: https://deckshare.zip</PanelSectionRow>
+          <PanelSectionRow style={{textAlign: "center"}}>Version: {version}</PanelSectionRow>
         </PanelSection>
         <PanelSection title="Stats For Nerds">
           <PanelSectionRow>Screenshots Taken: {screenshotsTaken}</PanelSectionRow>
           <PanelSectionRow>Screenshots Shared: {screenshotsShared}</PanelSectionRow>
-          {(isOnline) ? (
-            <PanelSectionRow>Currently Online</PanelSectionRow>
-          ) : (
-            <PanelSectionRow>Currently Offline</PanelSectionRow>
-          )}
-          <Focusable>
-            <PanelSectionRow></PanelSectionRow>
-          </Focusable>
         </PanelSection>
       </div>
     </>
-  );
-};
+  )
+}
 
 export default definePlugin((serverApi: ServerAPI) => {
   PyInterop.setServer(serverApi);
-  const state = new ScreenshotsState();
-  PluginController.setup(serverApi, state);
+  PluginController.setup(serverApi);
   const loginHook = PluginController.initOnLogin();
+
+  serverApi.routerHook.addRoute("/deckshare", Router);
 
   return {
     title: <div className={staticClasses.Title}>DeckShare</div>,
-    content: (
-      <ScreenshotsContextProvider screenshotsStateClass={state}>
-        <Content serverAPI={serverApi} />
-      </ScreenshotsContextProvider>
-    ),
-    icon: <IoApps />,
-    onDismount() {
+    content:  <Content serverAPI={serverApi} />,
+    icon: <img src={logo} alt="Logo" width="32px" height="32px;" />,
+    onDismount: () => {
+      PyInterop.log("Unmounting DeckShare Plugin");
       loginHook.unregister();
-      serverApi.routerHook.removeRoute("/deckshare-config");
-      PluginController.dismount();
+      serverApi.routerHook.removeRoute("/deckshare");
     },
-    alwaysRender: true
-  };
-});
+    alwaysRender: true,
+  }
+})

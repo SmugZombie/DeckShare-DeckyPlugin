@@ -8,3 +8,7 @@ logger.setLevel(logging.INFO) # can be changed to logging.DEBUG for debugging is
 
 def log(txt):
   logger.info(txt)
+
+def debuglog(txt, enabled=False):
+  if enabled:
+    logger.debug(txt)

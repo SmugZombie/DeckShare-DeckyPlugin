@@ -1,5 +1,5 @@
-import { PyInterop } from "../../PyInterop";
-import { SteamController } from "./SteamController";
+import { PyInterop } from "../PyInterop";
+import { SteamController } from "./steamcontroller";
 
 /**
  * Controller class for screenshots.

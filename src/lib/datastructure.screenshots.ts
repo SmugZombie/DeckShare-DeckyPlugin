@@ -1,5 +1,3 @@
-import { Hook } from "../controllers/HookController";
-
 /**
  * Contains all of the nessesary information on each screenshot.
  */

@@ -12,7 +12,11 @@ export default defineConfig({
   input: './src/index.tsx',
   plugins: [
     commonjs(),
-    nodeResolve(),
+    nodeResolve(
+      {
+        preferBuiltins: false,
+      }
+    ),
     typescript(),
     json(),
     replace({
@@ -30,7 +34,8 @@ export default defineConfig({
     globals: {
       react: "SP_REACT",
       "react-dom": "SP_REACTDOM",
-      "decky-frontend-lib": "DFL"
+      "decky-frontend-lib": "DFL",
+      punycode: 'punycode'
     },
     format: 'iife',
     exports: 'default',

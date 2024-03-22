@@ -1,5 +1,5 @@
 import { ServerAPI, ServerResponse } from "decky-frontend-lib";
-import { Screenshot } from "./lib/data-structures/Screenshot";
+import { Screenshot } from "./lib/data-structures/screenshots";
 
 type ScreenshotsDictionary = {
   [key: string]: Screenshot
@@ -10,7 +10,6 @@ type ScreenshotsDictionary = {
  */
 export class PyInterop {
   private static serverAPI: ServerAPI;
-
   /**
    * Sets the interop's severAPI.
    * @param serv The ServerAPI for the interop to use.
@@ -23,7 +22,6 @@ export class PyInterop {
    * Gets the interop's serverAPI.
    */
   static get server(): ServerAPI { return this.serverAPI; }
-
   /**
    * Logs a message to bash screenshot's log file and the frontend console.
    * @param message The message to log.
@@ -61,32 +59,13 @@ export class PyInterop {
     })();
   }
 
-  /**
-   * Gets the screenshots from the backend.
-   * @returns A promise resolving to a server response containing the screenshots dictionary.
-   */
   static async getScreenshots(): Promise<ServerResponse<ScreenshotsDictionary>> {
     return await this.serverAPI.callPluginMethod<{}, ScreenshotsDictionary>("getScreenshots", {});
   }
 
-  /**
-   * Gets the plugin's guides.
-   * @returns The guides.
-   */
-  static async getGuides(): Promise<ServerResponse<GuidePages>> {
-    return await this.serverAPI.callPluginMethod<{}, GuidePages>("getGuides", {});
-  }
-
-  /**
-   * Gets the value of a plugin's setting.
-   * @param key The key of the setting to get.
-   * @param defaultVal The default value of the setting.
-   * @returns A promise resolving to the setting's value.
-   */
   static async getSetting<T>(key: string, defaultVal: T): Promise<T> {
     return (await this.serverAPI.callPluginMethod<{ key: string, defaultVal: T }, T>("getSetting", { key: key, defaultVal: defaultVal })).result as T;
   }
-
   
   static async getImage<T>(key: string): Promise<T> {
     return (await this.serverAPI.callPluginMethod<{ filepath: string }, T>("getImage", { filepath: key })).result as T;
@@ -96,98 +75,18 @@ export class PyInterop {
     return (await this.serverAPI.callPluginMethod("isOnline", {})).result as T;
   }  
 
-  /**
-   * Sets the value of a plugin's setting.
-   * @param key The key of the setting to set.
-   * @param newVal The new value for the setting.
-   * @returns A void promise resolving once the setting is set.
-   */
   static async setSetting<T>(key: string, newVal: T): Promise<ServerResponse<void>> {
     return await this.serverAPI.callPluginMethod<{ key: string, newVal : T}, void>("setSetting", { key: key, newVal: newVal });
   }
 
-  /**
-   * Adds a new screenshot on the backend and returns the updated screenshots dictionary.
-   * @param screenshot The screenshot to add.
-   * @returns A promise resolving to a server response containing the updated screenshots dictionary.
-   */
-  static async addScreenshot(screenshot: Screenshot): Promise<ServerResponse<ScreenshotsDictionary>> {
-    return await this.serverAPI.callPluginMethod<{ screenshot: Screenshot }, ScreenshotsDictionary>("addScreenshot", { screenshot: screenshot });
-  }
-
-  /**
-   * Sets the entire screenshots dictionary, and returns the updated dictionary.
-   * @param screenshots The updated screenshots dictionary.
-   * @returns A promise resolving to a server response containing the updated screenshots dictionary.
-   */
-  static async setScreenshots(screenshots: ScreenshotsDictionary): Promise<ServerResponse<ScreenshotsDictionary>> {
-    return await this.serverAPI.callPluginMethod<{ screenshots: ScreenshotsDictionary }, ScreenshotsDictionary>("setScreenshots", { screenshots: screenshots });
-  }
-
-  /**
-   * Updates/edits a screenshot on the backend, and returns the updated dictionary.
-   * @param screenshot The screenshot to update.
-   * @returns A promise resolving to a server response containing the updated screenshots dictionary.
-   */
-  static async modScreenshot(screenshot: Screenshot): Promise<ServerResponse<ScreenshotsDictionary>> {
-    return await this.serverAPI.callPluginMethod<{ screenshot: Screenshot }, ScreenshotsDictionary>("modScreenshot", { screenshot: screenshot });
-  }
-
-  /**
-   * Removes a screenshot on the backend and returns the updated screenshots dictionary.
-   * @param screenshot The screenshot to remove.
-   * @returns A promise resolving to a server response containing the updated screenshots dictionary.
-   */
-  static async remScreenshot(screenshot: Screenshot): Promise<ServerResponse<ScreenshotsDictionary>> {
-    return await this.serverAPI.callPluginMethod<{ screenshot: Screenshot }, ScreenshotsDictionary>("remScreenshot", { screenshot: screenshot });
-  }
-
-  /**
-   * Runs a non app screenshot.
-   * @param screenshotId The id of the screenshot to run.
-   * @param flags Optional tuple array of flags to pass to the screenshot.
-   */
-  static async runNonAppScreenshot(screenshotId: string, flags: [string, string][]): Promise<ServerResponse<void>> {
-    const successful = await this.serverAPI.callPluginMethod<{ screenshotId: string, flags: [string, string][] }, void>("runNonAppScreenshot", { screenshotId: screenshotId, flags: flags });
-    return successful;
-  }
-
-  /**
-   * Kills a non app screenshot.
-   * @param screenshotId The id of the screenshot to kill.
-   */
-  static async killNonAppScreenshot(screenshotId: string): Promise<ServerResponse<void>> {
-    const successful = await this.serverAPI.callPluginMethod<{ screenshotId: string }, void>("killNonAppScreenshot", { screenshotId: screenshotId });
-    return successful;
-  }
-
-  /**
-   * Sets the value of a plugin's setting.
-   * @param key The key of the setting to set.
-   * @param newVal The new value for the setting.
-   * @returns A void promise resolving once the setting is set.
-   */
   static async getWebhookUrl<T>(): Promise<ServerResponse<void>> {
     return await this.serverAPI.callPluginMethod<{ key: string, newVal : T}, void>("getWebhookUrl", { });
   }
 
-
-  /**
-   * Sets the value of a plugin's setting.
-   * @param key The key of the setting to set.
-   * @param newVal The new value for the setting.
-   * @returns A void promise resolving once the setting is set.
-   */
   static async setWebhookUrl<T>(key: string): Promise<ServerResponse<void>> {
     return await this.serverAPI.callPluginMethod<{ key: string}, void>("setWebhookUrl", { webhookUrl: key });
   }
 
-  /**
-   * Sets the value of a plugin's setting.
-   * @param key The key of the setting to set.
-   * @param newVal The new value for the setting.
-   * @returns A void promise resolving once the setting is set.
-   */
   static async uploadScreenshot(key: string): Promise<ServerResponse<void>> {
     return await this.serverAPI.callPluginMethod<{ filepath: string }, void>("uploadScreenshot", { filepath: key });
   }
@@ -203,4 +102,16 @@ export class PyInterop {
   static async processQueue(): Promise<ServerResponse<void>> {
     return await this.serverAPI.callPluginMethod<{ }, void>("processQueue", { });
   }
+
+  static async getLogs<T>(): Promise<T> {
+    return (await this.serverAPI.callPluginMethod("getLogs", {})).result as T;
+  }  
+
+  static async getSuccessfulUploads<T>(): Promise<T> {
+    return (await this.serverAPI.callPluginMethod("getSuccessfulUploads", {})).result as T;
+  }  
+
+  static async getAboutContent<T>(): Promise<T> {
+    return (await this.serverAPI.callPluginMethod("getAboutContent", {})).result as T;
+  }  
 }
