@@ -9,6 +9,7 @@ import http.client
 import mimetypes
 import base64
 import socket
+import time
 from py_backend.instanceManager import InstanceManager
 from py_backend.jsInterop import JsInteropManager
 from settings import SettingsManager
@@ -149,7 +150,7 @@ class Plugin:
     pass
 
   # Get the latest screenshots from the Steam screenshots directory limited to the newest 5 that are not thumbnails
-  async def getScreenshots(self):
+  async def getScreenshots(self, size=12):
     screenshots = {}
     user = self.GetSteamId(self)
     url = "{0}userdata/{1}/760/remote/".format(self.steamdir, user & 0xFFFFFFFF)
@@ -164,7 +165,7 @@ class Plugin:
     sorted_screenshots = sorted(screenshots.items(), key=lambda x: x[0], reverse=True)
 
     # Get only the first 10 elements of the list
-    sorted_screenshots = sorted_screenshots[:10]
+    sorted_screenshots = sorted_screenshots[:size]
 
     # Generate base64 for each remaining screenshot
     for file_name, screenshot_info in sorted_screenshots:
@@ -186,6 +187,8 @@ class Plugin:
         status = await self.queueUploads(self, filepath, getFilenameFromFilepath(filepath))
       else:
         status = await upload_file(filepath, self.discordWebhookURL)
+        if(status == 200):
+          await self.logSuccessfulUpload(self, getFilenameFromFilepath(filepath))
         log(status)
       return status
     except Exception as e:
@@ -208,12 +211,44 @@ class Plugin:
         status = await self.queueUploads(self, newestScreenshot, getFilenameFromFilepath(newestScreenshot))
       else:
         status = await upload_file(newestScreenshot, self.discordWebhookURL)
-        await self.processQueue(self, False)
+        if(status == 200):
+          await self.logSuccessfulUpload(self, getFilenameFromFilepath(newestScreenshot))
+          await self.processQueue(self, False)
         log(f"upload_file response: {status}")
       return status
     except Exception as e:
       log(f"An error occurred: {e}")
     return False
+
+  async def logSuccessfulUpload(self, filename):
+    try:
+      uploaded = self.settingsManager.getSetting("successfulUploads", {})
+      uploaded[filename] = {'timestamp': int(time.time())}
+      # Limit the number of successful uploads stored to 10
+      if len(uploaded) > 12:
+        uploaded.pop(next(iter(uploaded)))
+
+      self.settingsManager.setSetting("successfulUploads", uploaded)
+      return True
+    except Exception as e:
+      log(f"queueUploads - Error: {e}")
+      return False
+    
+  async def getSuccessfulUploads(self):
+    try:
+      uploaded = self.settingsManager.getSetting("successfulUploads", {})
+      return {'uploads': uploaded}
+    except Exception as e:
+      log(f"getSuccessfulUploads - Error: {e}")
+      return False
+    
+  async def clearSuccessfulUploads(self):
+    try:
+      self.settingsManager.setSetting("successfulUploads", {})
+      return True
+    except Exception as e:
+      log(f"clearSuccessfulUploads - Error: {e}")
+      return False
 
   async def queueUploads(self, filepath, filename):
     try:
@@ -269,6 +304,8 @@ class Plugin:
       # Loop through the queue and upload each file
       for filename, fileinfo in queue.items():
         status = await upload_file(fileinfo['path'], self.discordWebhookURL)
+        if(status == 200):
+          await self.logSuccessfulUpload(self, getFilenameFromFilepath(fileinfo['path']))
         debuglog(f"processQueue - {filename} - {status}", self.settingsManager.getSetting("debug", False))
         if status == 200:
           del queue[filename]

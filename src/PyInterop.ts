@@ -107,6 +107,10 @@ export class PyInterop {
     return (await this.serverAPI.callPluginMethod("getLogs", {})).result as T;
   }  
 
+  static async getSuccessfulUploads<T>(): Promise<T> {
+    return (await this.serverAPI.callPluginMethod("getSuccessfulUploads", {})).result as T;
+  }  
+
   static async getAboutContent<T>(): Promise<T> {
     return (await this.serverAPI.callPluginMethod("getAboutContent", {})).result as T;
   }  

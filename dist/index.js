@@ -91,6 +91,9 @@
         static async getLogs() {
             return (await this.serverAPI.callPluginMethod("getLogs", {})).result;
         }
+        static async getSuccessfulUploads() {
+            return (await this.serverAPI.callPluginMethod("getSuccessfulUploads", {})).result;
+        }
         static async getAboutContent() {
             return (await this.serverAPI.callPluginMethod("getAboutContent", {})).result;
         }
@@ -254,11 +257,16 @@
 
     const ScreenshotManagerController = () => {
         const [screenshotsList, setScreenshotsList] = React.useState({});
+        const [successfulUploads, setSuccessfulUploads] = React.useState({});
         async function reload() {
             try {
                 await PyInterop.getScreenshots().then((res) => {
                     //PyInterop.log("Screenshots: " + JSON.stringify(res.result));
                     setScreenshotsList(res.result);
+                });
+                await PyInterop.getSuccessfulUploads().then((res) => {
+                    PyInterop.log("Successful Uploads: " + JSON.stringify(res.uploads));
+                    setSuccessfulUploads(res.uploads);
                 });
             }
             catch (e) {
@@ -268,8 +276,18 @@
         if (Object.keys(screenshotsList).length === 0) {
             reload();
         }
+        else {
+            Object.values(screenshotsList).forEach((screenshot) => {
+                if (successfulUploads[screenshot.id]) {
+                    screenshot.uploaded = true;
+                }
+                else {
+                    screenshot.uploaded = false;
+                }
+            });
+        }
         return (window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Recent Screenshots" },
-            (Object.keys(screenshotsList).length === 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null, Object.values(screenshotsList).map((itm) => (window.SP_REACT.createElement("span", { style: { border: "1px solid red" } }, itm.base64 && window.SP_REACT.createElement("img", { style: { height: "100px" }, src: `data:image/png;base64,${itm.base64}`, alt: "Screenshot" })))))),
+            (Object.keys(screenshotsList).length === 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null, Object.values(screenshotsList).map((itm) => (window.SP_REACT.createElement("span", { style: { border: itm.uploaded ? "1px solid green" : "1px solid red" } }, itm.base64 && window.SP_REACT.createElement("img", { style: { height: "100px" }, src: `data:image/png;base64,${itm.base64}`, alt: "Screenshot" })))))),
             window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
                 window.SP_REACT.createElement(deckyFrontendLib.ButtonItem, { layout: "below", onClick: reload }, "Reload Screenshots"))));
     };

@@ -13,7 +13,9 @@ import {
 import { Screenshot } from "../lib/datastructure.screenshots";
 
 const ScreenshotManagerController = () => {
+    const [ isLoading, setIsLoading ] = useState(true);
     const [ screenshotsList, setScreenshotsList ] = useState({});
+    const [ successfulUploads, setSuccessfulUploads ] = useState({});
 
     async function reload() {
         try{
@@ -21,14 +23,29 @@ const ScreenshotManagerController = () => {
                 //PyInterop.log("Screenshots: " + JSON.stringify(res.result));
                 setScreenshotsList(res.result);
             });
+            await PyInterop.getSuccessfulUploads().then((res) => {
+                PyInterop.log("Successful Uploads: " + JSON.stringify(res.uploads));
+                setSuccessfulUploads(res.uploads);
+            }
+            
         }catch(e){
             PyInterop.log("Error in reload: " + e);
         }
+        setIsLoading(false);
     }
 
     if (Object.keys(screenshotsList).length === 0) {
         reload();
       }
+    else {
+        Object.values(screenshotsList).forEach((screenshot: Screenshot) => {
+            if (successfulUploads[screenshot.id]) {
+                screenshot.uploaded = true;
+            } else {
+                screenshot.uploaded = false;
+            }
+        });
+    }
 
     return (
         <PanelSection title="Recent Screenshots">
@@ -39,7 +56,7 @@ const ScreenshotManagerController = () => {
                 <>
                     {
                         Object.values(screenshotsList).map((itm: Screenshot) => (
-                            <span style={{border: "1px solid red"}}>
+                            <span style={{border: itm.uploaded ? "1px solid green" : "1px solid red"}}>
                                 {itm.base64 && <img style={{ height: "100px" }} src={`data:image/png;base64,${itm.base64}`} alt="Screenshot" />}
                             </span>
                         ))
