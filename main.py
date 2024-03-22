@@ -348,13 +348,14 @@ def get_newest_jpg(self):
       # Traverse the directory tree
       try:
         for root, dirs, files in os.walk(url):
-          for file in files:
-            if file.endswith(".jpg"):
-              file_path = os.path.join(root, file)
-              file_time = os.path.getctime(file_path)
-              if newest_file is None or file_time > newest_file_time:
-                newest_file = file_path
-                newest_file_time = file_time
+          if "thumbnails" not in root:
+            for file in files:
+              if file.endswith(".jpg"):
+                file_path = os.path.join(root, file)
+                file_time = os.path.getctime(file_path)
+                if newest_file is None or file_time > newest_file_time:
+                  newest_file = file_path
+                  newest_file_time = file_time
       except Exception as e:
           log(f"An error occurred while searching for .jpg files: {e}")
           return None
