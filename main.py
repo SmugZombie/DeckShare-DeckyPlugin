@@ -12,7 +12,8 @@ import socket
 from py_backend.instanceManager import InstanceManager
 from py_backend.jsInterop import JsInteropManager
 from settings import SettingsManager
-from py_backend.logger import log
+from py_backend.logger import log, debuglog
+from pathlib import Path
 
 Initialized = False
 
@@ -22,10 +23,13 @@ class Plugin:
   pluginSettingsDir = os.environ["DECKY_PLUGIN_SETTINGS_DIR"]
   pluginDirPath = os.path.dirname(__file__)
   guidesDirPath = f"/home/{pluginUser}/homebrew/plugins/deckshare-plugin/guides"
+  parentDirPath = Path(pluginDirPath).parent
+  homebrewDirPath = f"/home/{pluginUser}/homebrew"
   settingsManager = SettingsManager(name='DeckShare', settings_directory=pluginSettingsDir)
   steamdir = "/home/deck/.local/share/Steam/"
-  version = "0.1.5beta"
+  version = "0.2.0beta"
   discordWebhookURLBase = "https://discord.com/api/webhooks/"
+  debug = False
 
   # Validates the Webhook URL by sending a GET request to the URL and checking the status code of the response
   async def validateWebhookUrl(self, webhookUrl):
@@ -128,6 +132,7 @@ class Plugin:
     if "webSocketPort" not in self.settingsManager.settings:
       log("No WebSocket port detected in settings.")
       self.settingsManager.setSetting("webSocketPort", "5050")
+      self.settingsManager.setSetting("debug", False)
       log("Set WebSocket port to default; \"5050\"")
     else:
       log(f"WebSocket port loaded from settings. Port: {self.settingsManager.getSetting('webSocketPort', '')}")
@@ -158,8 +163,8 @@ class Plugin:
     # Convert the dictionary to a list of tuples and sort it based on the file name
     sorted_screenshots = sorted(screenshots.items(), key=lambda x: x[0], reverse=True)
 
-    # Get only the first 5 elements of the list
-    sorted_screenshots = sorted_screenshots[:5]
+    # Get only the first 10 elements of the list
+    sorted_screenshots = sorted_screenshots[:10]
 
     # Generate base64 for each remaining screenshot
     for file_name, screenshot_info in sorted_screenshots:
@@ -251,20 +256,20 @@ class Plugin:
       # Check to ensure we are online
       if(checkStatus == True):
         if await self.isOnline(self) == False:
-          log("processQueue - Online Check Failed")
+          debuglog("processQueue - Online Check Failed", self.settingsManager.getSetting("debug", False))
           return False
       # Fetch the current queue
       queue = self.settingsManager.getSetting("uploadQueue", {})
       # Check if the queue is empty, if so no need to continue
       if len(queue) == 0:
-        log("Queue is empty")
+        debuglog("Queue is empty", self.settingsManager.getSetting("debug", False))
         return False
       # Log the length of the queue
-      log(f"Offline Queue Length: {len(queue)}")
+      debuglog(f"Offline Queue Length: {len(queue)}", self.settingsManager.getSetting("debug", False))
       # Loop through the queue and upload each file
       for filename, fileinfo in queue.items():
         status = await upload_file(fileinfo['path'], self.discordWebhookURL)
-        log(f"processQueue - {filename} - {status}")
+        debuglog(f"processQueue - {filename} - {status}", self.settingsManager.getSetting("debug", False))
         if status == 200:
           del queue[filename]
     except Exception as e:
@@ -280,8 +285,11 @@ class Plugin:
 
   async def isOnline(self):
     try:
+      # DEV - Force offline mode for testing
+      if(self.settingsManager.getSetting("devOfflineMode", False) == True):
+        return False
       # Attempt to create a socket connection to a known server
-      socket.create_connection(("8.8.8.8", 53), timeout=3)
+      socket.create_connection(("8.8.8.8", 53), timeout=1)
       self.settingsManager.setSetting("online", True)
       return True
     except OSError:
@@ -298,6 +306,27 @@ class Plugin:
       return await image_to_base64(filepath)
     except Exception as e:
       log(f"An error occurred [getImage]: {e}")
+    return False
+  
+  async def getLogs(self):
+    try:
+      log_file_path = f"{self.homebrewDirPath}/logs/{os.path.basename(self.pluginDirPath)}/DeckShare.log"
+      with open(log_file_path, "r") as logFile:
+        lines = logFile.readlines()
+      last_50_lines = lines[-100:]
+      return {'logs': last_50_lines}
+    except Exception as e:
+      log(f"An error occurred [getLogs]: {e}")
+    return False
+  
+  async def getAboutContent(self):
+    try:
+      about_file_path = f"{self.parentDirPath}/README.md"
+      with open(about_file_path, "r") as aboutFile:
+        aboutContent = aboutFile.read()
+      return {'about': aboutContent}
+    except Exception as e:
+      log(f"An error occurred [getAboutContent]: {e}")
     return False
 
 # Returns the newest created screenshot in the Steam screenshots directory

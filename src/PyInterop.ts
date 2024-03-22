@@ -102,4 +102,12 @@ export class PyInterop {
   static async processQueue(): Promise<ServerResponse<void>> {
     return await this.serverAPI.callPluginMethod<{ }, void>("processQueue", { });
   }
+
+  static async getLogs<T>(): Promise<T> {
+    return (await this.serverAPI.callPluginMethod("getLogs", {})).result as T;
+  }  
+
+  static async getAboutContent<T>(): Promise<T> {
+    return (await this.serverAPI.callPluginMethod("getAboutContent", {})).result as T;
+  }  
 }
