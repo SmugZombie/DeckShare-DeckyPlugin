@@ -358,7 +358,7 @@ class Plugin:
   
   async def getAboutContent(self):
     try:
-      about_file_path = f"{self.parentDirPath}/README.md"
+      about_file_path = f"{self.pluginDirPath}/README.md"
       with open(about_file_path, "r") as aboutFile:
         aboutContent = aboutFile.read()
       return {'about': aboutContent}

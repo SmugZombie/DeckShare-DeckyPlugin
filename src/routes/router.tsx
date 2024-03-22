@@ -2,7 +2,7 @@ import {
     SidebarNavigation
   } from "decky-frontend-lib"
   import { VFC } from "react"
-  import { FaClock, FaCog, FaInfo, FaPuzzlePiece, FaCode } from "react-icons/fa"
+  import { FaCog, FaInfo, FaCode, FaRegImages, FaRegListAlt } from "react-icons/fa"
   import { LogController } from "../controllers/logcontroller"
   import { DeveloperController } from "../controllers/developercontroller"
   import { ScreenshotManagerController } from "../controllers/screenshotmanagercontroller"
@@ -14,7 +14,7 @@ import {
       {
         title: 'Screenshots',
         content: <ScreenshotManagerController />,
-        icon: <FaClock/>,
+        icon: <FaRegImages/>,
         hideTitle: false
       },
       {
@@ -26,7 +26,7 @@ import {
       {
         title: 'Logs',
         content: <LogController />,
-        icon: <FaInfo/>,
+        icon: <FaRegListAlt/>,
         hideTitle: false
       },
       {
@@ -38,7 +38,7 @@ import {
       {
         title: 'About',
         content: <AboutController />,
-        icon: <FaPuzzlePiece/>,
+        icon: <FaInfo/>,
         hideTitle: false
       }
     ]

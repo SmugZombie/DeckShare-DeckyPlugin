@@ -18,7 +18,7 @@ const mdIt = new MarkDownIt({
 })
 
 const AboutController =() => {
-    const [ aboutContent, setAboutContent ] = useState("");
+    const [ aboutContent, setAboutContent ] = useState("Loading...");
 
     async function loadAboutContent() {
         await PyInterop.getAboutContent().then((res) => {
@@ -26,13 +26,13 @@ const AboutController =() => {
         });
     }
 
-    if(aboutContent === ""){
+    if(aboutContent === "Loading..."){
         loadAboutContent();
     }
 
     return (
         <div>
-            
+            <div dangerouslySetInnerHTML={{__html: mdIt.render(aboutContent)}}></div>
         </div>
     )
 }
