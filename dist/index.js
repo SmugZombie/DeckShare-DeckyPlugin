@@ -255,6 +255,7 @@
                     window.SP_REACT.createElement(deckyFrontendLib.DialogButton, { onClick: () => checkOnlineStatus() }, "Check Online Status")))));
     };
 
+    deckyFrontendLib.joinClassNames(deckyFrontendLib.gamepadDialogClasses.Field, deckyFrontendLib.gamepadDialogClasses.WithBottomSeparatorStandard);
     const ScreenshotManagerController = () => {
         const [isLoading, setIsLoading] = React.useState(true);
         const [screenshotsList, setScreenshotsList] = React.useState({});
@@ -262,11 +263,9 @@
         async function reload() {
             try {
                 await PyInterop.getScreenshots().then((res) => {
-                    //PyInterop.log("Screenshots: " + JSON.stringify(res.result));
                     setScreenshotsList(res.result);
                 });
                 await PyInterop.getSuccessfulUploads().then((res) => {
-                    PyInterop.log("Successful Uploads: " + JSON.stringify(res.uploads));
                     setSuccessfulUploads(res.uploads);
                 });
             }
@@ -288,8 +287,36 @@
                 }
             });
         }
-        return (window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Recent Screenshots" },
-            (Object.keys(screenshotsList).length === 0) ? (window.SP_REACT.createElement("div", { style: { textAlign: "center", margin: "14px 0px", padding: "0px 15px", fontSize: "18px" } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null, Object.values(screenshotsList).map((itm) => (window.SP_REACT.createElement("span", { style: { border: itm.uploaded ? "1px solid green" : "1px solid red" } }, itm.base64 && window.SP_REACT.createElement("img", { style: { height: "100px" }, src: `data:image/png;base64,${itm.base64}`, alt: "Screenshot" })))))),
+        return (window.SP_REACT.createElement(deckyFrontendLib.PanelSection, { title: "Recent Screenshots", style: {
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                padding: "20px",
+                gap: "20px"
+            } },
+            window.SP_REACT.createElement(deckyFrontendLib.Focusable, { className: "", style: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gridTemplateRows: "repeat(4, 1fr)", gridGap: "0.5rem", padding: "8px 0" } }, (Object.keys(screenshotsList).length === 0) ? (window.SP_REACT.createElement("div", { style: {
+                    textAlign: "center",
+                    margin: "14px 0px",
+                    padding: "0px 15px",
+                    fontSize: "18px"
+                } }, "No screenshots found")) : (window.SP_REACT.createElement(React.Fragment, null, Object.values(screenshotsList).map((itm) => (window.SP_REACT.createElement("div", { style: {
+                    border: itm.uploaded ? "3px solid green" : "3px solid red",
+                    width: "180px",
+                    display: "flex",
+                    borderRadius: "8px",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    flex: "0 0 auto",
+                } },
+                itm.base64 && window.SP_REACT.createElement("img", { style: { height: "100px", width: "180px" }, src: `data:image/png;base64,${itm.base64}`, alt: "Screenshot" }),
+                window.SP_REACT.createElement("div", { style: { padding: "8px", textAlign: "center" } },
+                    window.SP_REACT.createElement("div", { style: { fontSize: "12px", fontWeight: "bold" } }, itm.name),
+                    window.SP_REACT.createElement("div", { style: { fontSize: "10px" } }, itm.uploaded ? "Shared" : "Not Shared"),
+                    window.SP_REACT.createElement(deckyFrontendLib.ButtonItem, { style: { height: "30px", justifyContent: "center", fontSize: "10px" }, onClick: () => {
+                            PyInterop.uploadScreenshot(itm.path).then(() => {
+                                reload();
+                            });
+                        } }, "Share")))))))),
             window.SP_REACT.createElement(deckyFrontendLib.PanelSectionRow, null,
                 window.SP_REACT.createElement(deckyFrontendLib.ButtonItem, { layout: "below", onClick: reload }, "Reload Screenshots"))));
     };
